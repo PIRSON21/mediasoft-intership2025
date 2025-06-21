@@ -1,10 +1,10 @@
 # Технические требования
 - [ ] Проект оформляется по стандарту [golang-project-layout](https://github.com/golang-standards/project-layout)
 - [x] Версия компилятора golang 1.24
-- [ ] В качестве базы данных используется PostgreSQL версии 16 или выше
-- [ ] Для осуществления запросов в БД использовать драйвер и библиотеку [pgx/v5](https://github.com/jackc/pgx)
+- [x] В качестве базы данных используется PostgreSQL версии 16 или выше
+- [x] Для осуществления запросов в БД использовать драйвер и библиотеку [pgx/v5](https://github.com/jackc/pgx)
 - [ ] Мигратор базы данных - [golang-migrate](https://github.com/golang-migrate/migrate)
-- [ ] Логгер - [zap](https://github.com/uber-go/zap)
+- [x] Логгер - [zap](https://github.com/uber-go/zap)
 - [ ] Проект должен собираться в docker-compose.
 - [ ] Как минимум три образа:
   - [ ] База данных

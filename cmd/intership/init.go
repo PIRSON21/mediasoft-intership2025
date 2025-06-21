@@ -1,30 +1,31 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
 
 	"github.com/PIRSON21/mediasoft-go/internal/handler"
 	"github.com/PIRSON21/mediasoft-go/internal/repository"
 	"github.com/PIRSON21/mediasoft-go/internal/service"
+	"github.com/PIRSON21/mediasoft-go/pkg/config"
 	"github.com/PIRSON21/mediasoft-go/pkg/logger"
+	"go.uber.org/zap"
 )
 
 func initApp() {
-	if err := logger.NewLogger(); err != nil {
-		log.Fatal(err)
-	}
+	cfg := config.MustParseConfig()
+	log.Println("config successfully parsed", cfg)
+
+	logger.MustCreateLogger(cfg.LoggerConfig)
 
 	zlog := logger.GetLogger()
 	zlog.Info("logger successfully set up")
 
 	// подключение repositories
 	zlog.Info("trying to connect to repositories")
-	repo, err := repository.NewRepository()
-	if err != nil {
-		zlog.Error("error while connetcion to repository", "err", err)
-		log.Fatal(err)
-	}
+	repo := repository.MustInitRepository(context.TODO(), cfg.DBConfig)
+
 	zlog.Info("repositories set up successfully")
 
 	// инициализация services
@@ -41,7 +42,7 @@ func initApp() {
 
 	mux.HandleFunc("/test", warehouseHandlers.GetWarehouses)
 
-	// запуск сервера
-	zlog.Info("server ready to start", "addr", ":8080")
-	http.ListenAndServe(":8080", mux)
+	// запуск сервера TODO: убрать отсюда
+	zlog.Info("server ready to start", zap.String("addr", cfg.Address))
+	http.ListenAndServe(cfg.Address, mux)
 }
