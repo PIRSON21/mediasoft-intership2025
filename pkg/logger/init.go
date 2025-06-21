@@ -52,6 +52,7 @@ func createLoggerConfig(config *config.LoggerConfig) zap.Config {
 	cfg.Level = level
 
 	cfg.Encoding = encoding
+	cfg.DisableStacktrace = true
 
 	return cfg
 }
