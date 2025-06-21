@@ -38,11 +38,18 @@ func initApp() {
 	}
 
 	// задание роутингов
-	mux := http.NewServeMux()
-
-	mux.HandleFunc("/test", warehouseHandlers.GetWarehouses)
+	mux := createRouter(warehouseHandlers)
 
 	// запуск сервера TODO: убрать отсюда
 	zlog.Info("server ready to start", zap.String("addr", cfg.Address))
 	http.ListenAndServe(cfg.Address, mux)
+}
+
+func createRouter(warehouseHandlers *handler.WarehouseHandler) *http.ServeMux {
+	mux := http.NewServeMux()
+
+	// warehouses
+	mux.HandleFunc("/warehouses", warehouseHandlers.WarehousesHandler)
+
+	return mux
 }

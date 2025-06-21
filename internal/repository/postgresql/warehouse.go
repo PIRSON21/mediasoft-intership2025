@@ -1,17 +1,56 @@
 package postgresql
 
-import "github.com/PIRSON21/mediasoft-go/internal/domain"
+import (
+	"context"
+	"errors"
+	"fmt"
 
-func (db *Postgres) GetWarehouses() []*domain.Warehouse {
-	return []*domain.Warehouse{
-		createWarehouse(1, "aboba"),
-		createWarehouse(2, "boba"),
+	"github.com/PIRSON21/mediasoft-go/internal/domain"
+	custErr "github.com/PIRSON21/mediasoft-go/internal/errors"
+	"github.com/PIRSON21/mediasoft-go/pkg/logger"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
+	"go.uber.org/zap"
+)
+
+func (db *Postgres) GetWarehouses(ctx context.Context) ([]*domain.Warehouse, error) {
+	var warehouses []*domain.Warehouse
+	log := logger.GetLogger().With(zap.String("op", "repository.postgres.GetWarehouses"))
+
+	stmt := `SELECT warehouse_id, warehouse_address FROM warehouse`
+
+	err := db.pool.QueryRow(ctx, stmt).Scan(&warehouses)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return warehouses, nil
+		}
+		log.Error("error while getting warehouses", zap.String("err", err.Error()))
+		return nil, err
 	}
+	log.Debug("warehouses written successfully", zap.Any("warehouses", warehouses))
+
+	return warehouses, nil
 }
 
-func createWarehouse(id int, address string) *domain.Warehouse {
-	return &domain.Warehouse{
-		ID:      id,
-		Address: address,
+func (db *Postgres) CreateWarehouse(ctx context.Context, warehouse *domain.Warehouse) error {
+	log := logger.GetLogger().With(zap.String("op", "repository.Postgres.CreateWarehouse"))
+
+	stmt := fmt.Sprintf(
+		`INSERT INTO warehouse(warehouse_address)
+		VALUES ($1)
+	`)
+
+	_, err := db.pool.Exec(ctx, stmt, warehouse.Address)
+	if err != nil {
+		var pgxError *pgconn.PgError
+		if errors.As(err, &pgxError) {
+			if pgxError.Code == "23505" {
+				return custErr.ErrWarehouseAlreadyExists
+			}
+		}
+		log.Error("error while creating warehouse", zap.String("err", err.Error()))
+		return err
 	}
+
+	return nil
 }
