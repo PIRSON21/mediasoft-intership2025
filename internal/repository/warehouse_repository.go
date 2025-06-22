@@ -1,7 +1,12 @@
 package repository
 
-import "github.com/PIRSON21/mediasoft-go/internal/domain"
+import (
+	"context"
+
+	"github.com/PIRSON21/mediasoft-go/internal/domain"
+)
 
 type WarehouseRepository interface {
-	GetWarehouses() []*domain.Warehouse
+	GetWarehouses(context.Context) ([]*domain.Warehouse, error)
+	CreateWarehouse(context.Context, *domain.Warehouse) error
 }

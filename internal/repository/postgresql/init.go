@@ -1,29 +1,52 @@
 package postgresql
 
 import (
-	"github.com/jackc/pgx/v5"
+	"context"
+	"fmt"
+
+	"github.com/PIRSON21/mediasoft-go/pkg/config"
+	"github.com/PIRSON21/mediasoft-go/pkg/logger"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"go.uber.org/zap"
 )
 
 type Postgres struct {
-	conn *pgx.Conn
+	pool *pgxpool.Pool
 }
 
-func NewPostgres() (*Postgres, error) {
-	// connOpts := createPostgresOpts()
+func NewPostgres(ctx context.Context, dbConfig config.DBConfig) (*Postgres, error) {
+	const op = "repository.postgresql.NewPostgres"
+	log := logger.GetLogger()
+	log = log.With(zap.String("op", op))
 
-	// conn, err := pgx.ConnectConfig(context.TODO(), connOpts)
-	// if err != nil {
-	// 	return nil, err
-	// }
+	connOpts, err := parsePostgresOpts(dbConfig)
+	if err != nil {
+		log.Error("error while parsing config", zap.Error(err))
+		return nil, err
+	}
 
-	// return &Postgres{
-	// 	conn: conn,
-	// }, nil
+	pool, err := pgxpool.NewWithConfig(ctx, connOpts)
+	if err != nil {
+		log.Error("error while creating connection pool", zap.Error(err))
+		return nil, err
+	}
 
-	return &Postgres{}, nil
+	err = pool.Ping(ctx)
+	if err != nil {
+		log.Error("error while checking postgres connection", zap.Error(err))
+		return nil, err
+	}
+
+	return &Postgres{
+		pool: pool,
+	}, nil
 }
 
-func createPostgresOpts() *pgx.ConnConfig {
-	cfg, _ := pgx.ParseConfig("")
-	return cfg
+func parsePostgresOpts(cfg config.DBConfig) (*pgxpool.Config, error) {
+	uri := fmt.Sprintf("postgres://%s:%s@%s:%d/%s?", cfg.DBUser, cfg.DBPassword, cfg.DBHost, cfg.DBPort, cfg.DBName)
+	pgxCfg, err := pgxpool.ParseConfig(uri)
+	if err != nil {
+		return nil, err
+	}
+	return pgxCfg, nil
 }
