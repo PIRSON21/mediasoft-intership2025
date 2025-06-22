@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/PIRSON21/mediasoft-go/internal/handler"
+	"github.com/PIRSON21/mediasoft-go/internal/middleware"
 	"github.com/PIRSON21/mediasoft-go/internal/repository"
 	"github.com/PIRSON21/mediasoft-go/internal/service"
 	"github.com/PIRSON21/mediasoft-go/pkg/config"
@@ -49,7 +50,18 @@ func createRouter(warehouseHandlers *handler.WarehouseHandler) *http.ServeMux {
 	mux := http.NewServeMux()
 
 	// warehouses
-	mux.HandleFunc("/warehouses", warehouseHandlers.WarehousesHandler)
+	mux.Handle("/warehouses", chainMiddleware(
+		http.HandlerFunc(warehouseHandlers.WarehousesHandler),
+		middleware.Recoverer,
+		middleware.LoggingMiddleware,
+	))
 
 	return mux
+}
+
+func chainMiddleware(h http.Handler, mws ...func(http.Handler) http.HandlerFunc) http.Handler {
+	for i := len(mws) - 1; i >= 0; i-- {
+		h = mws[i](h)
+	}
+	return h
 }
