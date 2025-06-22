@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/PIRSON21/mediasoft-go/internal/dto"
 	custErr "github.com/PIRSON21/mediasoft-go/internal/errors"
@@ -30,7 +29,6 @@ func (h *WarehouseHandler) WarehousesHandler(w http.ResponseWriter, r *http.Requ
 }
 
 func (h *WarehouseHandler) GetWarehouses(w http.ResponseWriter, r *http.Request) {
-	start := time.Now()
 	log := logger.GetLogger().With(
 		zap.String("op", "handlers.WarehouseHandler.GetWarehouses"),
 		zap.String("remoteAddr", r.RemoteAddr),
@@ -48,12 +46,9 @@ func (h *WarehouseHandler) GetWarehouses(w http.ResponseWriter, r *http.Request)
 		custErr.UnnamedError(w, http.StatusInternalServerError, fmt.Sprintf("error while encoding warehouses: %q", err.Error()))
 		return
 	}
-
-	log.Info(fmt.Sprintf("GET 200 %s", time.Since(start)))
 }
 
 func (h *WarehouseHandler) CreateWarehouse(w http.ResponseWriter, r *http.Request) {
-	start := time.Now()
 	var request dto.WarehouseRequest
 	log := logger.GetLogger().With(
 		zap.String("op", "handlers.WarehouseHandler.CreateWarehouse"),
@@ -88,7 +83,6 @@ func (h *WarehouseHandler) CreateWarehouse(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	log.Info(fmt.Sprintf("POST 201 %s", time.Since(start)))
 	w.WriteHeader(http.StatusCreated)
 }
 
