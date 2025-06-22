@@ -12,6 +12,7 @@ import (
 	custErr "github.com/PIRSON21/mediasoft-go/internal/errors"
 	"github.com/PIRSON21/mediasoft-go/internal/service"
 	"github.com/PIRSON21/mediasoft-go/pkg/logger"
+	"github.com/PIRSON21/mediasoft-go/pkg/render"
 	"go.uber.org/zap"
 )
 
@@ -38,19 +39,13 @@ func (h *WarehouseHandler) GetWarehouses(w http.ResponseWriter, r *http.Request)
 	warehouses, err := h.Service.GetWarehouses(r.Context())
 	if err != nil {
 		log.Error("error while getting warehouses", zap.String("err", err.Error()))
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{
-			"error": "error while getting warehouses",
-		})
+		custErr.UnnamedError(w, http.StatusInternalServerError, fmt.Sprintf("error while getting warehouses: %q", err.Error()))
 		return
 	}
 
-	if err := json.NewEncoder(w).Encode(warehouses); err != nil {
+	if err := render.JSON(w, http.StatusOK, warehouses); err != nil {
 		log.Error("error while encoding warehouses", zap.String("err", err.Error()))
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{
-			"error": "error while encoding warehouses",
-		})
+		custErr.UnnamedError(w, http.StatusInternalServerError, fmt.Sprintf("error while encoding warehouses: %q", err.Error()))
 		return
 	}
 
@@ -65,35 +60,31 @@ func (h *WarehouseHandler) CreateWarehouse(w http.ResponseWriter, r *http.Reques
 		zap.String("remoteAddr", r.RemoteAddr),
 	)
 
+	if r.Header.Get("Content-Type") != "application/json" {
+		log.Error("bad format", zap.String("format", r.Header.Get("Content-Type")))
+		custErr.UnnamedError(w, http.StatusUnprocessableEntity, "unsupported format")
+		return
+	}
+
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		log.Error("error while unmarshalling request", zap.String("err", err.Error()))
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{
-			"error": fmt.Sprintf("error while decoding warehouse: %q", err.Error()),
-		})
+		custErr.UnnamedError(w, http.StatusUnprocessableEntity, fmt.Sprintf("error while decoding warehouse: %q", err.Error()))
 		return
 	}
 
 	if validErr := validateWarehouse(&request); validErr != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(validErr)
+		render.JSON(w, http.StatusBadRequest, validErr)
 		return
 	}
 
 	err := h.Service.CreateWarehouse(context.TODO(), &request)
 	if err != nil {
 		if errors.Is(err, custErr.ErrWarehouseAlreadyExists) {
-			w.WriteHeader(http.StatusConflict)
-			json.NewEncoder(w).Encode(map[string]string{
-				"error": "warehouse already exists",
-			})
+			custErr.UnnamedError(w, http.StatusConflict, "warehouse already exists")
 			return
 		}
 		log.Error("error while creating warehouse", zap.String("err", err.Error()))
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{
-			"error": "error while creating warehouse",
-		})
+		custErr.UnnamedError(w, http.StatusInternalServerError, fmt.Sprintf("error while creating warehouse: %q", err.Error()))
 		return
 	}
 
