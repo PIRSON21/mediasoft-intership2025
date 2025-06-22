@@ -19,7 +19,7 @@ func (db *Postgres) GetWarehouses(ctx context.Context) ([]*domain.Warehouse, err
 
 	stmt := `SELECT warehouse_id, warehouse_address FROM warehouse`
 
-	err := db.pool.QueryRow(ctx, stmt).Scan(&warehouses)
+	rows, err := db.pool.Query(ctx, stmt)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return warehouses, nil
@@ -27,6 +27,18 @@ func (db *Postgres) GetWarehouses(ctx context.Context) ([]*domain.Warehouse, err
 		log.Error("error while getting warehouses", zap.String("err", err.Error()))
 		return nil, err
 	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var warehouse domain.Warehouse
+		err := rows.Scan(&warehouse.ID, &warehouse.Address)
+		if err != nil {
+			log.Error("error while parsing warehouse", zap.String("err", err.Error()))
+			continue
+		}
+		warehouses = append(warehouses, &warehouse)
+	}
+
 	log.Debug("warehouses written successfully", zap.Any("warehouses", warehouses))
 
 	return warehouses, nil
