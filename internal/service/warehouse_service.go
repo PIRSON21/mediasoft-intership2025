@@ -28,6 +28,12 @@ func (s *WarehouseService) GetWarehouses(ctx context.Context) ([]*dto.WarehouseA
 		log.Error("error while getting warehouses", zap.String("err", err.Error()))
 		return []*dto.WarehouseAtListResponse{}, err
 	}
+	warehousesResp := createWarehouseListResponse(warehouses)
+
+	return warehousesResp, nil
+}
+
+func createWarehouseListResponse(warehouses []*domain.Warehouse) []*dto.WarehouseAtListResponse {
 	warehousesResp := make([]*dto.WarehouseAtListResponse, 0, len(warehouses))
 
 	for _, v := range warehouses {
@@ -36,8 +42,7 @@ func (s *WarehouseService) GetWarehouses(ctx context.Context) ([]*dto.WarehouseA
 			Address: v.Address,
 		})
 	}
-
-	return warehousesResp, nil
+	return warehousesResp
 }
 
 func (s *WarehouseService) CreateWarehouse(ctx context.Context, request *dto.WarehouseRequest) error {
