@@ -100,3 +100,71 @@ func validateInventoryCreateRequest(req *dto.InventoryCreateRequest) map[string]
 	}
 	return nil
 }
+
+func (h *InventoryHandler) ChangeProductCount(w http.ResponseWriter, r *http.Request) {
+	log := logger.GetLogger().With(zap.String("op", "handler.InventoryHandler.ChangeProductCount"))
+
+	prodReq, err := parseChangeProductCountRequest(r.Body)
+	if err != nil {
+		log.Error("error while parsing JSON", zap.Error(err))
+		custErr.UnnamedError(w, http.StatusUnprocessableEntity, "cannot parse JSON")
+		return
+	}
+
+	validErr := validateChangeProductCountRequest(prodReq)
+	if validErr != nil {
+		render.JSON(w, http.StatusBadRequest, validErr)
+		return
+	}
+
+	err = h.service.ChangeProductCount(r.Context(), prodReq)
+	if err != nil {
+		if errors.Is(err, custErr.ErrInventoryNotFound) {
+			custErr.UnnamedError(w, http.StatusNotFound, "there is no information about this product on warehouse")
+			return
+		}
+		log.Error("error while change product count", zap.Error(err))
+		custErr.UnnamedError(w, http.StatusInternalServerError, "error while changing product count")
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func parseChangeProductCountRequest(r io.Reader) (*dto.ChangeProductCountRequest, error) {
+	var request dto.ChangeProductCountRequest
+
+	if err := json.NewDecoder(r).Decode(&request); err != nil {
+		return nil, err
+	}
+
+	return &request, nil
+}
+
+func validateChangeProductCountRequest(req *dto.ChangeProductCountRequest) map[string]string {
+	validErr := make(map[string]string, 0)
+
+	if req.WarehouseID == nil {
+		validErr["warehouse_id"] = "this field cannot be empty"
+	} else if *req.WarehouseID < 1 {
+		validErr["warehouse_id"] = "invalid warehouse ID"
+	}
+
+	if req.ProductID == nil {
+		validErr["product_id"] = "this field cannot be empty"
+	} else if *req.ProductID < 1 {
+		validErr["product_id"] = "invalid product ID"
+	}
+
+	if req.Count == nil {
+		validErr["product_count"] = "this field cannot be empty"
+	} else if *req.Count < 0 {
+		validErr["product_count"] = "invalid product count"
+	}
+
+	if len(validErr) != 0 {
+		return validErr
+	}
+
+	return nil
+}

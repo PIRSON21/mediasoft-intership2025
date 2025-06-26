@@ -8,4 +8,5 @@ import (
 
 type InventoryRepository interface {
 	CreateInventory(context.Context, *domain.Inventory) error
+	ChangeProductCount(context.Context, *domain.Inventory) error
 }

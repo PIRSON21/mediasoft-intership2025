@@ -41,3 +41,28 @@ func (db *Postgres) CreateInventory(ctx context.Context, inventory *domain.Inven
 
 	return nil
 }
+
+func (db *Postgres) ChangeProductCount(ctx context.Context, inventory *domain.Inventory) error {
+	log := logger.GetLogger().With(zap.String("op", "repository.Postgres.ChangeProductCount"))
+
+	// используется пользовательская функция. код в миграции 000004
+	stmt := `SELECT increase_product_count($1, $2, $3)`
+
+	tag, err := db.pool.Exec(ctx, stmt, &inventory.ProductID, &inventory.WarehouseID, &inventory.ProductCount)
+	if err != nil {
+		pgErr := new(pgconn.PgError)
+		if errors.As(err, &pgErr) {
+			if pgErr.Code == "P0002" {
+				return custErr.ErrInventoryNotFound
+			}
+		}
+		log.Error("error while executing statement", zap.String("stmt", stmt), zap.Error(err))
+		return err
+	}
+
+	if tag.RowsAffected() < 1 {
+		return fmt.Errorf("no rows affected")
+	}
+
+	return nil
+}
