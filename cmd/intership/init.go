@@ -38,16 +38,17 @@ func initApp() {
 		Service: service.NewWarehouseService(repo),
 	}
 	productHandlers := handler.NewProductHandler(*service.NewProductService(repo, cfg.Address))
+	inventoryHandlers := handler.NewInventoryHandler(service.NewInventoryService(repo))
 
 	// задание роутингов
-	mux := createRouter(warehouseHandlers, productHandlers)
+	mux := createRouter(warehouseHandlers, productHandlers, inventoryHandlers)
 
 	// запуск сервера TODO: убрать отсюда
 	zlog.Info("server ready to start", zap.String("addr", cfg.Address))
 	http.ListenAndServe(cfg.Address, mux)
 }
 
-func createRouter(warehouseHandlers *handler.WarehouseHandler, productHandlers *handler.ProductHandler) *http.ServeMux {
+func createRouter(warehouseHandlers *handler.WarehouseHandler, productHandlers *handler.ProductHandler, inventoryHandlers *handler.InventoryHandler) *http.ServeMux {
 	mux := http.NewServeMux()
 
 	// warehouses
@@ -66,6 +67,13 @@ func createRouter(warehouseHandlers *handler.WarehouseHandler, productHandlers *
 
 	mux.Handle("/product/", chainMiddleware(
 		http.HandlerFunc(productHandlers.UpdateProduct),
+		middleware.Recoverer,
+		middleware.LoggingMiddleware,
+	))
+
+	// inventory
+	mux.Handle("/inventory", chainMiddleware(
+		http.HandlerFunc(inventoryHandlers.CreateInventory),
 		middleware.Recoverer,
 		middleware.LoggingMiddleware,
 	))

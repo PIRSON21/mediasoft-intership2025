@@ -13,6 +13,7 @@ import (
 type Repository interface {
 	WarehouseRepository
 	ProductRepository
+	InventoryRepository
 }
 
 func MustInitRepository(ctx context.Context, dbCfg config.DBConfig) Repository {

@@ -1,0 +1,102 @@
+package handler
+
+import (
+	"encoding/json"
+	"errors"
+	"io"
+	"net/http"
+
+	"github.com/PIRSON21/mediasoft-go/internal/dto"
+	custErr "github.com/PIRSON21/mediasoft-go/internal/errors"
+	"github.com/PIRSON21/mediasoft-go/internal/service"
+	"github.com/PIRSON21/mediasoft-go/pkg/logger"
+	"github.com/PIRSON21/mediasoft-go/pkg/render"
+	"go.uber.org/zap"
+)
+
+type InventoryHandler struct {
+	service *service.InventoryService
+}
+
+func NewInventoryHandler(service *service.InventoryService) *InventoryHandler {
+	return &InventoryHandler{
+		service: service,
+	}
+}
+
+func (h *InventoryHandler) CreateInventory(w http.ResponseWriter, r *http.Request) {
+	log := logger.GetLogger().With(zap.String("op", "handler.InventoryHandler.CreateInventory"))
+
+	invRequest, err := parseInventory(r.Body)
+	if err != nil {
+		custErr.UnnamedError(w, http.StatusBadRequest, "error while parsing body")
+		return
+	}
+
+	validErr := validateInventoryCreateRequest(invRequest)
+	if validErr != nil {
+		render.JSON(w, http.StatusBadRequest, validErr)
+		return
+	}
+
+	err = h.service.CreateInventory(r.Context(), invRequest)
+	if err != nil {
+		if errors.Is(err, custErr.ErrInventoryAlreadyExists) {
+			custErr.UnnamedError(w, http.StatusConflict, "this inventory already exists")
+			return
+		}
+		if errors.Is(err, custErr.ErrForeignKey) {
+			custErr.UnnamedError(w, http.StatusBadRequest, "wrong product ID or warehouse ID")
+			return
+		}
+
+		log.Error("error while creating inventory", zap.Error(err))
+		custErr.UnnamedError(w, http.StatusInternalServerError, "error while creating inventory")
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+}
+
+func parseInventory(r io.Reader) (*dto.InventoryCreateRequest, error) {
+	var invReq dto.InventoryCreateRequest
+
+	if err := json.NewDecoder(r).Decode(&invReq); err != nil {
+		return nil, err
+	}
+
+	return &invReq, nil
+}
+
+func validateInventoryCreateRequest(req *dto.InventoryCreateRequest) map[string]string {
+	validErr := make(map[string]string, 0)
+
+	if req.ProductID == nil {
+		validErr["product_id"] = "this field cannot be empty"
+	} else if *req.ProductID < 1 {
+		validErr["product_id"] = "invalid product ID"
+	}
+
+	if req.WarehouseID == nil {
+		validErr["warehouse_id"] = "this field cannot be empty"
+	} else if *req.WarehouseID < 1 {
+		validErr["warehouse_id"] = "invalid warehouse ID"
+	}
+
+	if req.Count == nil {
+		validErr["product_count"] = "this field cannot be empty"
+	} else if *req.Count < 0 {
+		validErr["product_count"] = "invalid product count"
+	}
+
+	if req.Price == nil {
+		validErr["product_price"] = "this field cannot be empty"
+	} else if *req.Price < 0 {
+		validErr["product_price"] = "invalid product price"
+	}
+
+	if len(validErr) > 0 {
+		return validErr
+	}
+	return nil
+}
