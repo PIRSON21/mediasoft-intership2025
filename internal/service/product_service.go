@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -104,7 +103,6 @@ func createFile(photo *dto.Photo) (string, error) {
 
 	// TODO: можно сделать генерацию названия файла.
 	savePath := filepath.Join("static", photo.Handler.Filename)
-	fmt.Println(savePath)
 	dst, err := os.Create(savePath)
 	if err != nil {
 		return "", err
@@ -120,7 +118,6 @@ func createFile(photo *dto.Photo) (string, error) {
 }
 
 func parseProductFromRequest(req *dto.ProductRequest, filename string) *domain.Product {
-	fmt.Println(req)
 	return &domain.Product{
 		Name:        req.Name,
 		Description: req.Description,

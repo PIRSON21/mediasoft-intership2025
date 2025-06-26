@@ -4,8 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/PIRSON21/mediasoft-go/internal/domain"
+	custErr "github.com/PIRSON21/mediasoft-go/internal/errors"
 	"github.com/PIRSON21/mediasoft-go/pkg/logger"
 	"github.com/jackc/pgx/v5/pgconn"
 	"go.uber.org/zap"
@@ -51,10 +53,10 @@ func (db *Postgres) AddProduct(ctx context.Context, p *domain.Product) error {
 
 	tag, err := db.pool.Exec(ctx, stmt, p.Name, p.Description, p.Weight, p.Params, p.Barcode)
 	if err != nil {
-		var pgError pgconn.PgError
+		pgError := new(pgconn.PgError)
 		if errors.As(err, &pgError) {
 			if pgError.Code == "23505" {
-				return fmt.Errorf("product with that name already exists: %w", err)
+				return custErr.ErrProductAlreadyExists
 			}
 		}
 		return err
@@ -69,42 +71,42 @@ func (db *Postgres) AddProduct(ctx context.Context, p *domain.Product) error {
 
 func (db *Postgres) UpdateProduct(ctx context.Context, product *domain.Product) error {
 	var (
-		query         string
+		query         []string
 		currentCursor int = 1
 		args          []any
 	)
 
 	if product.Name != "" {
-		query += fmt.Sprintf("product_name = $%d ", currentCursor)
+		query = append(query, fmt.Sprintf("product_name = $%d", currentCursor))
 		args = append(args, product.Name)
 		currentCursor++
 	}
 
 	if product.Description != "" {
-		query += fmt.Sprintf("product_description = $%d ", currentCursor)
+		query = append(query, fmt.Sprintf("product_description = $%d", currentCursor))
 		args = append(args, product.Description)
 		currentCursor++
 	}
 
 	if product.Weight != 0 {
-		query += fmt.Sprintf("product_weight = $%d ", currentCursor)
+		query = append(query, fmt.Sprintf("product_weight = $%d", currentCursor))
 		args = append(args, product.Weight)
 		currentCursor++
 	}
 
 	if product.Params != nil {
-		query += fmt.Sprintf("product_params = $%d ", currentCursor)
+		query = append(query, fmt.Sprintf("product_params = $%d", currentCursor))
 		args = append(args, product.Params)
 		currentCursor++
 	}
 
 	if product.Barcode != "" {
-		query += fmt.Sprintf("product_barcode = $%d ", currentCursor)
+		query = append(query, fmt.Sprintf("product_barcode = $%d", currentCursor))
 		args = append(args, product.Barcode)
 		currentCursor++
 	}
 
-	stmt := "UPDATE product SET " + query + "WHERE parking_id = $%d"
+	stmt := "UPDATE product SET " + strings.Join(query, ", ") + fmt.Sprintf(" WHERE product_id = $%d", currentCursor)
 	args = append(args, product.ID)
 
 	tag, err := db.pool.Exec(ctx, stmt, args...)
@@ -113,7 +115,7 @@ func (db *Postgres) UpdateProduct(ctx context.Context, product *domain.Product) 
 	}
 
 	if tag.RowsAffected() < 1 {
-		return fmt.Errorf("no arrows were affected")
+		return custErr.ErrProductNotFound
 	}
 
 	return nil

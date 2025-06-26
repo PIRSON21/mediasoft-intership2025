@@ -64,7 +64,6 @@ func (h *ProductHandler) AddProduct(w http.ResponseWriter, r *http.Request) {
 		custErr.UnnamedError(w, http.StatusInternalServerError, "err while parsing product")
 		return
 	}
-	// fmt.Println(productRequest)
 
 	validErr := validateCreateProduct(productRequest)
 	if validErr != nil {
@@ -74,6 +73,10 @@ func (h *ProductHandler) AddProduct(w http.ResponseWriter, r *http.Request) {
 
 	err = h.service.AddProduct(r.Context(), productRequest)
 	if err != nil {
+		if errors.Is(err, custErr.ErrProductAlreadyExists) {
+			custErr.UnnamedError(w, http.StatusConflict, "product with this name already exists")
+			return
+		}
 		log.Error("err while adding product", zap.String("err", err.Error()))
 		custErr.UnnamedError(w, http.StatusInternalServerError, "err while adding product")
 		return
@@ -93,7 +96,7 @@ func parseProduct(r *http.Request) (*dto.ProductRequest, error) {
 	product.Description = r.FormValue("description")
 	weightStr := r.FormValue("weight")
 	if weightStr != "" {
-		weight, err := strconv.Atoi(weightStr)
+		weight, err := strconv.ParseFloat(weightStr, 64)
 		if err != nil {
 			return nil, fmt.Errorf("error while parsing weight: %w", err)
 		}

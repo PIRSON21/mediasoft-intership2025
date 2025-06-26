@@ -2,7 +2,7 @@ package domain
 
 type Product struct {
 	ID          int
-	Weight      int
+	Weight      float64
 	Name        string
 	Description string
 	Barcode     string // Штрихкод. Здесь хранится только название файла. Сам файл хранится на диске сервера. sdasad
