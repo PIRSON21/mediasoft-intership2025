@@ -5,6 +5,6 @@ type WarehouseRequest struct {
 }
 
 type WarehouseAtListResponse struct {
-	ID      int    `json:"id"`
+	ID      string `json:"id"`
 	Address string `json:"address"`
 }

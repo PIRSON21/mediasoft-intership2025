@@ -1,6 +1,6 @@
 CREATE OR REPLACE FUNCTION increase_product_count(
-    in_product_id INT,
-    in_warehouse_id INT,
+    in_product_id UUID,
+    in_warehouse_id UUID,
     in_delta INT
 ) RETURNS VOID AS $$
 DECLARE

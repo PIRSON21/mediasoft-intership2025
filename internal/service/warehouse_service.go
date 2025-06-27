@@ -38,7 +38,7 @@ func createWarehouseListResponse(warehouses []*domain.Warehouse) []*dto.Warehous
 
 	for _, v := range warehouses {
 		warehousesResp = append(warehousesResp, &dto.WarehouseAtListResponse{
-			ID:      v.ID,
+			ID:      v.ID.String(),
 			Address: v.Address,
 		})
 	}

@@ -3,7 +3,7 @@ package dto
 import "mime/multipart"
 
 type ProductAtListResponse struct {
-	ID          int            `json:"id"`
+	ID          string         `json:"id"`
 	Name        string         `json:"name"`
 	Weight      float64        `json:"weight"`
 	Description string         `json:"desc"`

@@ -12,6 +12,7 @@ import (
 	"github.com/PIRSON21/mediasoft-go/internal/service"
 	"github.com/PIRSON21/mediasoft-go/pkg/logger"
 	"github.com/PIRSON21/mediasoft-go/pkg/render"
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
 
@@ -75,15 +76,15 @@ func parseInventory(r io.Reader) (*dto.InventoryCreateRequest, error) {
 func validateInventoryCreateRequest(req *dto.InventoryCreateRequest) map[string]string {
 	validErr := make(map[string]string, 0)
 
-	if req.ProductID == nil {
+	if req.ProductID == "" {
 		validErr["product_id"] = "this field cannot be empty"
-	} else if *req.ProductID < 1 {
+	} else if err := uuid.Validate(req.ProductID); err != nil {
 		validErr["product_id"] = "invalid product ID"
 	}
 
-	if req.WarehouseID == nil {
+	if req.WarehouseID == "" {
 		validErr["warehouse_id"] = "this field cannot be empty"
-	} else if *req.WarehouseID < 1 {
+	} else if err := uuid.Validate(req.WarehouseID); err != nil {
 		validErr["warehouse_id"] = "invalid warehouse ID"
 	}
 
@@ -151,16 +152,16 @@ func parseChangeProductCountRequest(r io.Reader) (*dto.ChangeProductCountRequest
 func validateChangeProductCountRequest(req *dto.ChangeProductCountRequest) map[string]string {
 	validErr := make(map[string]string, 0)
 
-	if req.WarehouseID == nil {
-		validErr["warehouse_id"] = "this field cannot be empty"
-	} else if *req.WarehouseID < 1 {
-		validErr["warehouse_id"] = "invalid warehouse ID"
+	if req.ProductID == "" {
+		validErr["product_id"] = "this field cannot be empty"
+	} else if err := uuid.Validate(req.ProductID); err != nil {
+		validErr["product_id"] = "invalid product ID"
 	}
 
-	if req.ProductID == nil {
-		validErr["product_id"] = "this field cannot be empty"
-	} else if *req.ProductID < 1 {
-		validErr["product_id"] = "invalid product ID"
+	if req.WarehouseID == "" {
+		validErr["warehouse_id"] = "this field cannot be empty"
+	} else if err := uuid.Validate(req.WarehouseID); err != nil {
+		validErr["warehouse_id"] = "invalid warehouse ID"
 	}
 
 	if req.Count == nil {

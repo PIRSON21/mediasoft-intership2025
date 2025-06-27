@@ -14,6 +14,7 @@ import (
 	"github.com/PIRSON21/mediasoft-go/internal/service"
 	"github.com/PIRSON21/mediasoft-go/pkg/logger"
 	"github.com/PIRSON21/mediasoft-go/pkg/render"
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
 
@@ -192,15 +193,13 @@ func (h *ProductHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func parseProductID(r *http.Request) (int, error) {
+func parseProductID(r *http.Request) (uuid.UUID, error) {
 	splits := strings.Split(r.URL.Path, "/")
-	productID, err := strconv.Atoi(splits[len(splits)-1])
-	if err != nil {
-		return 0, err
-	}
+	productIDStr := splits[len(splits)-1]
 
-	if productID <= 0 {
-		return 0, fmt.Errorf("id cannot be less than 1")
+	productID, err := uuid.Parse(productIDStr)
+	if err != nil {
+		return uuid.UUID{}, err
 	}
 
 	return productID, nil
