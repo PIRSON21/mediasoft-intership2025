@@ -9,6 +9,7 @@ import (
 
 	"github.com/PIRSON21/mediasoft-go/internal/dto"
 	custErr "github.com/PIRSON21/mediasoft-go/internal/errors"
+	"github.com/PIRSON21/mediasoft-go/internal/middleware"
 	"github.com/PIRSON21/mediasoft-go/internal/service"
 	"github.com/PIRSON21/mediasoft-go/pkg/logger"
 	"github.com/PIRSON21/mediasoft-go/pkg/render"
@@ -31,7 +32,7 @@ func (h *WarehouseHandler) WarehousesHandler(w http.ResponseWriter, r *http.Requ
 func (h *WarehouseHandler) GetWarehouses(w http.ResponseWriter, r *http.Request) {
 	log := logger.GetLogger().With(
 		zap.String("op", "handlers.WarehouseHandler.GetWarehouses"),
-		zap.String("remoteAddr", r.RemoteAddr),
+		zap.String("request-id", middleware.GetRequestID(r.Context())),
 	)
 
 	warehouses, err := h.Service.GetWarehouses(r.Context())
@@ -52,7 +53,7 @@ func (h *WarehouseHandler) CreateWarehouse(w http.ResponseWriter, r *http.Reques
 	var request dto.WarehouseRequest
 	log := logger.GetLogger().With(
 		zap.String("op", "handlers.WarehouseHandler.CreateWarehouse"),
-		zap.String("remoteAddr", r.RemoteAddr),
+		zap.String("request-id", middleware.GetRequestID(r.Context())),
 	)
 
 	if r.Header.Get("Content-Type") != "application/json" {

@@ -10,6 +10,7 @@ import (
 
 	"github.com/PIRSON21/mediasoft-go/internal/dto"
 	custErr "github.com/PIRSON21/mediasoft-go/internal/errors"
+	"github.com/PIRSON21/mediasoft-go/internal/middleware"
 	"github.com/PIRSON21/mediasoft-go/internal/service"
 	"github.com/PIRSON21/mediasoft-go/pkg/logger"
 	"github.com/PIRSON21/mediasoft-go/pkg/render"
@@ -38,7 +39,10 @@ func (h *ProductHandler) ProductsHandler(w http.ResponseWriter, r *http.Request)
 }
 
 func (h *ProductHandler) GetProducts(w http.ResponseWriter, r *http.Request) {
-	log := logger.GetLogger().With(zap.String("op", "handler.ProductHandler.GetProducts"))
+	log := logger.GetLogger().With(
+		zap.String("op", "handler.ProductHandler.GetProducts"),
+		zap.String("request-id", middleware.GetRequestID(r.Context())),
+	)
 
 	productResponse, err := h.service.GetProducts(r.Context())
 	if err != nil {
@@ -56,7 +60,10 @@ func (h *ProductHandler) GetProducts(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *ProductHandler) AddProduct(w http.ResponseWriter, r *http.Request) {
-	log := logger.GetLogger().With(zap.String("op", "handler.ProductHandler.AddProduct"))
+	log := logger.GetLogger().With(
+		zap.String("op", "handler.ProductHandler.AddProduct"),
+		zap.String("request-id", middleware.GetRequestID(r.Context())),
+	)
 
 	productRequest, err := parseProduct(r)
 	if err != nil {

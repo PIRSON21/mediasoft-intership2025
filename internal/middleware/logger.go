@@ -12,7 +12,7 @@ import (
 func LoggingMiddleware(next http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log := logger.GetLogger().With(
-			zap.String("remoteAddr", r.RemoteAddr),
+			zap.String("request-id", GetRequestID(r.Context())),
 		)
 		start := time.Now()
 

@@ -8,6 +8,7 @@ import (
 
 	"github.com/PIRSON21/mediasoft-go/internal/dto"
 	custErr "github.com/PIRSON21/mediasoft-go/internal/errors"
+	"github.com/PIRSON21/mediasoft-go/internal/middleware"
 	"github.com/PIRSON21/mediasoft-go/internal/service"
 	"github.com/PIRSON21/mediasoft-go/pkg/logger"
 	"github.com/PIRSON21/mediasoft-go/pkg/render"
@@ -25,7 +26,10 @@ func NewInventoryHandler(service *service.InventoryService) *InventoryHandler {
 }
 
 func (h *InventoryHandler) CreateInventory(w http.ResponseWriter, r *http.Request) {
-	log := logger.GetLogger().With(zap.String("op", "handler.InventoryHandler.CreateInventory"))
+	log := logger.GetLogger().With(
+		zap.String("op", "handler.InventoryHandler.CreateInventory"),
+		zap.String("request-id", middleware.GetRequestID(r.Context())),
+	)
 
 	invRequest, err := parseInventory(r.Body)
 	if err != nil {
@@ -102,7 +106,10 @@ func validateInventoryCreateRequest(req *dto.InventoryCreateRequest) map[string]
 }
 
 func (h *InventoryHandler) ChangeProductCount(w http.ResponseWriter, r *http.Request) {
-	log := logger.GetLogger().With(zap.String("op", "handler.InventoryHandler.ChangeProductCount"))
+	log := logger.GetLogger().With(
+		zap.String("op", "handler.InventoryHandler.ChangeProductCount"),
+		zap.String("request-id", middleware.GetRequestID(r.Context())),
+	)
 
 	prodReq, err := parseChangeProductCountRequest(r.Body)
 	if err != nil {
