@@ -12,3 +12,13 @@ type ChangeProductCountRequest struct {
 	ProductID   string `json:"product_id"`
 	Count       *int   `json:"product_count"`
 }
+
+type DiscountToProductRequest struct {
+	WarehouseID string      `json:"warehouse_id"`
+	Discounts   []*Discount `json:"discounts"`
+}
+
+type Discount struct {
+	ProductID     string `json:"product_id"`
+	DiscountValue *int   `json:"discount"`
+}

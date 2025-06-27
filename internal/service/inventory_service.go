@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/PIRSON21/mediasoft-go/internal/domain"
 	"github.com/PIRSON21/mediasoft-go/internal/dto"
@@ -92,4 +93,54 @@ func parseChangeProductCountRequestToDomain(req *dto.ChangeProductCountRequest) 
 		WarehouseID:  warehouseID,
 		ProductCount: *req.Count,
 	}, nil
+}
+
+func (s *InventoryService) AddDiscountToProduct(ctx context.Context, request *dto.DiscountToProductRequest) error {
+	log := logger.GetLogger().With(
+		zap.String("op", "service.InventoryService.AddDiscountToProduct"),
+	)
+
+	inventory, err := parseDiscountToInventory(request)
+	if err != nil {
+		log.Error("error while parsing discounts to inventory", zap.Error(err))
+		return err
+	}
+
+	err = s.repo.AddDiscountToProducts(ctx, inventory)
+	if err != nil {
+		log.Error("error while adding discounts to repository", zap.Error(err))
+		return err
+	}
+
+	return nil
+}
+
+func parseDiscountToInventory(req *dto.DiscountToProductRequest) ([]*domain.Inventory, error) {
+	var inventory []*domain.Inventory
+
+	warehouseID, err := uuid.Parse(req.WarehouseID)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, discount := range req.Discounts {
+		productID, err := uuid.Parse(discount.ProductID)
+		if err != nil {
+			continue
+		}
+
+		inv := &domain.Inventory{
+			ProductID:   productID,
+			WarehouseID: warehouseID,
+			ProductSale: *discount.DiscountValue,
+		}
+
+		inventory = append(inventory, inv)
+	}
+
+	if len(inventory) == 0 {
+		return nil, fmt.Errorf("no one discount were parsed")
+	}
+
+	return inventory, nil
 }

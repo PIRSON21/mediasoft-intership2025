@@ -176,3 +176,111 @@ func validateChangeProductCountRequest(req *dto.ChangeProductCountRequest) map[s
 
 	return nil
 }
+
+func (h *InventoryHandler) AddDiscountToProduct(w http.ResponseWriter, r *http.Request) {
+	log := logger.GetLogger().With(
+		zap.String("op", "handler.InventoryHandler.AddDiscountToProduct"),
+		zap.String("request-id", middleware.GetRequestID(r.Context())),
+	)
+
+	discountReq, err := parseDiscountRequest(r.Body)
+	if err != nil {
+		log.Error("error while parsing discounts", zap.Error(err))
+		custErr.UnnamedError(w, http.StatusUnprocessableEntity, "error while parsing request")
+		return
+	}
+
+	validErr := validateDiscountRequest(discountReq)
+	if validErr != nil {
+		render.JSON(w, http.StatusBadRequest, validErr)
+		return
+	}
+
+	err = h.service.AddDiscountToProduct(r.Context(), discountReq)
+	if err != nil {
+		if errors.Is(err, custErr.ErrInventoryNotFound) {
+			custErr.UnnamedError(w, http.StatusBadRequest, "there is no some products in warehouse")
+			return
+		}
+		log.Error("error while adding discounts", zap.Error(err))
+		custErr.UnnamedError(w, http.StatusInternalServerError, "error adding discounts")
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func parseDiscountRequest(r io.Reader) (*dto.DiscountToProductRequest, error) {
+	var discounts dto.DiscountToProductRequest
+
+	err := json.NewDecoder(r).Decode(&discounts)
+	if err != nil {
+		return nil, err
+	}
+
+	return &discounts, nil
+}
+
+func validateDiscountRequest(req *dto.DiscountToProductRequest) map[string]any {
+	validErr := make(map[string]any)
+
+	if req.WarehouseID == "" {
+		validErr["warehouse_id"] = "this field cannot be empty"
+	} else if err := uuid.Validate(req.WarehouseID); err != nil {
+		validErr["warehouse_id"] = "invalid warehouse ID"
+	}
+
+	if len(req.Discounts) == 0 {
+		validErr["discounts"] = "there is no discounts"
+	}
+
+	discountsErr := validateDiscounts(req)
+
+	if discountsErr != nil {
+		validErr["discounts"] = discountsErr
+	}
+
+	if len(validErr) != 0 {
+		return validErr
+	}
+
+	return nil
+}
+
+func validateDiscounts(req *dto.DiscountToProductRequest) map[int]any {
+	discountsErr := make(map[int]any)
+	for idx, discount := range req.Discounts {
+		discountErr := validateDiscount(discount)
+		if discountErr != nil {
+			discountsErr[idx] = discountErr
+		}
+	}
+
+	if len(discountsErr) != 0 {
+		return discountsErr
+	}
+
+	return nil
+}
+
+func validateDiscount(discount *dto.Discount) map[string]string {
+	discountErr := make(map[string]string)
+
+	if discount.ProductID == "" {
+		discountErr["product_id"] = "this field cannot be empty"
+	} else if err := uuid.Validate(discount.ProductID); err != nil {
+		discountErr["product_id"] = "invalid product ID"
+	}
+
+	if discount.DiscountValue == nil {
+		discountErr["discount"] = "this field cannot be empty"
+	} else if *discount.DiscountValue < 0 || *discount.DiscountValue > 100 {
+		discountErr["discount"] = "discount must be greater than 0 and less than 100"
+	}
+
+	if len(discountErr) != 0 {
+		return discountErr
+	}
+
+	return nil
+}

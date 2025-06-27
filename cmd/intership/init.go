@@ -82,6 +82,13 @@ func createRouter(warehouseHandlers *handler.WarehouseHandler, productHandlers *
 		middleware.LoggingMiddleware,
 	))
 
+	mux.Handle("/inventory/add_discount", chainMiddleware(
+		http.HandlerFunc(inventoryHandlers.AddDiscountToProduct),
+		middleware.Recoverer,
+		middleware.RequestID,
+		middleware.LoggingMiddleware,
+	))
+
 	mux.Handle("/inventory", chainMiddleware(
 		http.HandlerFunc(inventoryHandlers.CreateInventory),
 		middleware.Recoverer,
