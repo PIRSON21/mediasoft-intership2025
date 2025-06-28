@@ -1,10 +1,8 @@
 package domain
 
-import "github.com/google/uuid"
-
 type Inventory struct {
-	ProductID    uuid.UUID
-	WarehouseID  uuid.UUID
+	Product      *Product
+	Warehouse    *Warehouse
 	ProductCount int
 	ProductPrice float64
 	ProductSale  int

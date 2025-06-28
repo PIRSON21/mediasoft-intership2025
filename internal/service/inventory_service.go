@@ -52,8 +52,12 @@ func parseInventoryRequestToDomain(req *dto.InventoryCreateRequest) (*domain.Inv
 	}
 
 	return &domain.Inventory{
-		ProductID:    productID,
-		WarehouseID:  warehouseID,
+		Product: &domain.Product{
+			ID: productID,
+		},
+		Warehouse: &domain.Warehouse{
+			ID: warehouseID,
+		},
 		ProductCount: *req.Count,
 		ProductPrice: *req.Price,
 	}, nil
@@ -89,8 +93,12 @@ func parseChangeProductCountRequestToDomain(req *dto.ChangeProductCountRequest) 
 	}
 
 	return &domain.Inventory{
-		ProductID:    productID,
-		WarehouseID:  warehouseID,
+		Product: &domain.Product{
+			ID: productID,
+		},
+		Warehouse: &domain.Warehouse{
+			ID: warehouseID,
+		},
 		ProductCount: *req.Count,
 	}, nil
 }
@@ -130,8 +138,12 @@ func parseDiscountToInventory(req *dto.DiscountToProductRequest) ([]*domain.Inve
 		}
 
 		inv := &domain.Inventory{
-			ProductID:   productID,
-			WarehouseID: warehouseID,
+			Product: &domain.Product{
+				ID: productID,
+			},
+			Warehouse: &domain.Warehouse{
+				ID: warehouseID,
+			},
 			ProductSale: *discount.DiscountValue,
 		}
 

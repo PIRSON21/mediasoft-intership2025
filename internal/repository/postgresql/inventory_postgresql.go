@@ -21,7 +21,7 @@ func (db *Postgres) CreateInventory(ctx context.Context, inventory *domain.Inven
 	VALUES ($1, $2, $3, $4)
 	`
 
-	tag, err := db.pool.Exec(ctx, stmt, inventory.ProductID, inventory.WarehouseID, inventory.ProductCount, inventory.ProductPrice)
+	tag, err := db.pool.Exec(ctx, stmt, inventory.Product.ID, inventory.Warehouse.ID, inventory.ProductCount, inventory.ProductPrice)
 	if err != nil {
 		pgError := new(pgconn.PgError)
 		if errors.As(err, &pgError) {
@@ -49,7 +49,7 @@ func (db *Postgres) ChangeProductCount(ctx context.Context, inventory *domain.In
 	// используется пользовательская функция. код в миграции 000004
 	stmt := `SELECT increase_product_count($1, $2, $3)`
 
-	tag, err := db.pool.Exec(ctx, stmt, &inventory.ProductID, &inventory.WarehouseID, &inventory.ProductCount)
+	tag, err := db.pool.Exec(ctx, stmt, &inventory.Product.ID, &inventory.Warehouse.ID, &inventory.ProductCount)
 	if err != nil {
 		pgErr := new(pgconn.PgError)
 		if errors.As(err, &pgErr) {
@@ -96,7 +96,7 @@ func addDiscount(ctx context.Context, conn pgx.Tx, discount *domain.Inventory) e
 		UPDATE inventory SET product_sale = $1 WHERE warehouse_id = $2 AND product_id = $3
 	`
 
-	tag, err := conn.Exec(ctx, stmt, discount.ProductSale, discount.WarehouseID, discount.ProductID)
+	tag, err := conn.Exec(ctx, stmt, discount.ProductSale, discount.Warehouse.ID, discount.Product.ID)
 	if err != nil {
 		return err
 	}
