@@ -3,8 +3,10 @@ package handler
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
+	"strings"
 
 	"github.com/PIRSON21/mediasoft-go/internal/dto"
 	custErr "github.com/PIRSON21/mediasoft-go/internal/errors"
@@ -283,4 +285,64 @@ func validateDiscount(discount *dto.Discount) map[string]string {
 	}
 
 	return nil
+}
+
+func (h *InventoryHandler) GetProductFromWarehouse(w http.ResponseWriter, r *http.Request) {
+	log := logger.GetLogger().With(
+		zap.String("op", "handler.InventoryHandler.GetProductFromWarehouse"),
+		zap.String("request-id", middleware.GetRequestID(r.Context())),
+	)
+
+	warehouseID, err := parseWarehouseIDFromURL(r)
+	if err != nil {
+		custErr.UnnamedError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	productID, err := parseProductIDFromQuery(r)
+	if err != nil {
+		custErr.UnnamedError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	product, err := h.service.GetProductFromWarehouse(r.Context(), warehouseID, productID)
+	if err != nil {
+		if errors.Is(err, custErr.ErrProductNotFound) {
+			custErr.UnnamedError(w, http.StatusNotFound, "there is no such product in the warehouse")
+			return
+		}
+		log.Error("error while getting product", zap.Error(err))
+		custErr.UnnamedError(w, http.StatusInternalServerError, "error while getting product")
+		return
+	}
+
+	render.JSON(w, http.StatusOK, product)
+}
+
+func parseWarehouseIDFromURL(r *http.Request) (string, error) {
+	splits := strings.Split(r.URL.Path, "/")
+
+	warehouseID := splits[len(splits)-1]
+
+	if err := uuid.Validate(warehouseID); err != nil {
+		return "", fmt.Errorf("warehouse id is not valid")
+	}
+
+	return warehouseID, nil
+}
+
+func parseProductIDFromQuery(r *http.Request) (string, error) {
+	err := r.ParseForm()
+	if err != nil {
+		return "", err
+	}
+
+	productID := r.FormValue("product_id")
+	if productID == "" {
+		return "", fmt.Errorf("empty product id")
+	} else if err := uuid.Validate(productID); err != nil {
+		return "", fmt.Errorf("product id is not valid")
+	}
+
+	return productID, nil
 }

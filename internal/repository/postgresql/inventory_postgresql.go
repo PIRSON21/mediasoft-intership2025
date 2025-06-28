@@ -2,6 +2,7 @@ package postgresql
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 
@@ -103,6 +104,39 @@ func addDiscount(ctx context.Context, conn pgx.Tx, discount *domain.Inventory) e
 
 	if tag.RowsAffected() < 1 {
 		return custErr.ErrInventoryNotFound
+	}
+
+	return nil
+}
+
+func (db *Postgres) GetProductFromWarehouse(ctx context.Context, inventory *domain.Inventory) error {
+	log := logger.GetLogger().With(
+		zap.String("op", "repository.Postgres.GetProductFromWarehouse"),
+	)
+
+	stmt := `
+	SELECT p.product_name, p.product_description, p.product_weight, p.product_params, p.product_barcode, inv.product_count, inv.product_price, inv.product_sale
+	FROM inventory inv
+	JOIN product p USING (product_id)
+	WHERE product_id = $1 AND warehouse_id = $2
+	`
+
+	err := db.pool.QueryRow(ctx, stmt, inventory.Product.ID, inventory.Warehouse.ID).Scan(
+		&inventory.Product.Name,
+		&inventory.Product.Description,
+		&inventory.Product.Weight,
+		&inventory.Product.Params,
+		&inventory.Product.Barcode,
+		&inventory.ProductCount,
+		&inventory.ProductPrice,
+		&inventory.ProductSale,
+	)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return custErr.ErrProductNotFound
+		}
+		log.Error("error while getting rows", zap.Error(err))
+		return err
 	}
 
 	return nil

@@ -156,3 +156,68 @@ func parseDiscountToInventory(req *dto.DiscountToProductRequest) ([]*domain.Inve
 
 	return inventory, nil
 }
+
+func (s *InventoryService) GetProductFromWarehouse(ctx context.Context, warehouseID, productID string) (*dto.ProductFromWarehouseResponse, error) {
+	log := logger.GetLogger().With(
+		zap.String("op", "service.InventoryService.GetProductFromWarehouse"),
+	)
+
+	inventory, err := parseProductRequestToInventory(warehouseID, productID)
+	if err != nil {
+		log.Error("error while parsing productID and warehouseID", zap.Error(err))
+		return nil, err
+	}
+
+	err = s.repo.GetProductFromWarehouse(ctx, inventory)
+	if err != nil {
+		log.Error("error while getting product from warehouse", zap.Error(err))
+		return nil, err
+	}
+
+	response := parseProductFromWarehouseToResponse(inventory)
+
+	return response, nil
+}
+
+func parseProductRequestToInventory(warehouseIDStr, productIDStr string) (*domain.Inventory, error) {
+	warehouseID, err := uuid.Parse(warehouseIDStr)
+	if err != nil {
+		return nil, err
+	}
+
+	productID, err := uuid.Parse(productIDStr)
+	if err != nil {
+		return nil, err
+	}
+
+	return &domain.Inventory{
+		Product: &domain.Product{
+			ID: productID,
+		},
+		Warehouse: &domain.Warehouse{
+			ID: warehouseID,
+		},
+	}, nil
+}
+
+func parseProductFromWarehouseToResponse(inv *domain.Inventory) *dto.ProductFromWarehouseResponse {
+	response := &dto.ProductFromWarehouseResponse{
+		ProductID:          inv.Product.ID.String(),
+		ProductName:        inv.Product.Name,
+		ProductDescription: inv.Product.Description,
+		ProductWeight:      inv.Product.Weight,
+		ProductBarcode:     inv.Product.Barcode,
+		ProductCount:       inv.ProductCount,
+		ProductPrice:       inv.ProductPrice,
+	}
+
+	response.ProductParams = copyMap(inv.Product.Params)
+
+	if inv.ProductSale == 0 {
+		response.ProductPriceWithSale = inv.ProductPrice
+	} else {
+		response.ProductPriceWithSale = inv.ProductPrice * (1 - float64(inv.ProductSale)/100)
+	}
+
+	return response
+}
