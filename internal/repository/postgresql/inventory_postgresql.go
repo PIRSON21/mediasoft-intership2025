@@ -114,6 +114,17 @@ func (db *Postgres) GetProductFromWarehouse(ctx context.Context, inventory *doma
 		zap.String("op", "repository.Postgres.GetProductFromWarehouse"),
 	)
 
+	inv := struct {
+		ProductName        string
+		ProductDescription string
+		ProductWeight      sql.NullFloat64
+		ProductParams      map[string]any
+		ProductBarcode     string
+		ProductCount       sql.NullInt64
+		ProductPrice       sql.NullFloat64
+		ProductSale        sql.NullInt64
+	}{}
+
 	stmt := `
 	SELECT p.product_name, p.product_description, p.product_weight, p.product_params, p.product_barcode, inv.product_count, inv.product_price, inv.product_sale
 	FROM inventory inv
@@ -122,14 +133,14 @@ func (db *Postgres) GetProductFromWarehouse(ctx context.Context, inventory *doma
 	`
 
 	err := db.pool.QueryRow(ctx, stmt, inventory.Product.ID, inventory.Warehouse.ID).Scan(
-		&inventory.Product.Name,
-		&inventory.Product.Description,
-		&inventory.Product.Weight,
-		&inventory.Product.Params,
-		&inventory.Product.Barcode,
-		&inventory.ProductCount,
-		&inventory.ProductPrice,
-		&inventory.ProductSale,
+		&inv.ProductName,
+		&inv.ProductDescription,
+		&inv.ProductWeight,
+		&inv.ProductParams,
+		&inv.ProductBarcode,
+		&inv.ProductCount,
+		&inv.ProductPrice,
+		&inv.ProductSale,
 	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -139,5 +150,110 @@ func (db *Postgres) GetProductFromWarehouse(ctx context.Context, inventory *doma
 		return err
 	}
 
+	inventory.Product.Name = inv.ProductName
+	inventory.Product.Description = inv.ProductDescription
+	if inv.ProductWeight.Valid {
+		inventory.Product.Weight = inv.ProductWeight.Float64
+	}
+	if inv.ProductParams != nil {
+		inventory.Product.Params = inv.ProductParams
+	}
+	inventory.Product.Barcode = inv.ProductBarcode
+	if inv.ProductCount.Valid {
+		inventory.ProductCount = int(inv.ProductCount.Int64)
+	} else {
+		inventory.ProductCount = 0
+	}
+	if inv.ProductPrice.Valid {
+		inventory.ProductPrice = inv.ProductPrice.Float64
+	} else {
+		inventory.ProductPrice = 0
+	}
+	if inv.ProductSale.Valid {
+		inventory.ProductSale = int(inv.ProductSale.Int64)
+	} else {
+		inventory.ProductSale = 0
+	}
+
+	return nil
+}
+
+func (db *Postgres) GetPriceAndDiscount(ctx context.Context, invs []*domain.Inventory) error {
+	log := logger.GetLogger().With(
+		zap.String("op", "repository.Postgres.GetPriceAndDiscount"),
+	)
+
+	if len(invs) == 0 {
+		return nil
+	}
+
+	invMap := make(map[string]*domain.Inventory)
+	var productsID []string
+	warehouseID := invs[0].Warehouse.ID
+
+	for _, inv := range invs {
+		productID := inv.Product.ID.String()
+		invMap[productID] = inv
+		productsID = append(productsID, productID)
+	}
+
+	stmt := `
+		SELECT product_id, product_price, product_sale, product_count FROM inventory
+		WHERE warehouse_id = $1 AND product_id = ANY($2)
+	`
+
+	rows, err := db.pool.Query(ctx, stmt, warehouseID, productsID)
+	if err != nil {
+		log.Error("error while getting rows from DB", zap.Error(err))
+		return err
+	}
+	defer rows.Close()
+
+	err = scanRows(rows, invMap)
+	if err != nil {
+		log.Error("error while scanning rows", zap.Error(err))
+		return err
+	}
+
+	if rows.Err() != nil {
+		log.Error("error from rows", zap.Error(rows.Err()))
+		return rows.Err()
+	}
+
+	return nil
+}
+
+func scanRows(rows pgx.Rows, invMap map[string]*domain.Inventory) error {
+	for rows.Next() {
+		var (
+			productID string
+			price     sql.NullFloat64
+			discount  sql.NullInt64
+			count     sql.NullInt64
+		)
+
+		err := rows.Scan(&productID, &price, &discount, &count)
+		if err != nil {
+			return err
+		}
+
+		if !price.Valid {
+			price.Float64 = 0
+		}
+		if !discount.Valid {
+			discount.Int64 = 0
+		}
+		if !count.Valid {
+			count.Int64 = 0
+		}
+
+		if inv, ok := invMap[productID]; ok {
+			if inv.ProductCount > int(count.Int64) {
+				inv.ProductCount = int(count.Int64)
+			}
+			inv.ProductPrice = price.Float64
+			inv.ProductSale = int(discount.Int64)
+		}
+	}
 	return nil
 }

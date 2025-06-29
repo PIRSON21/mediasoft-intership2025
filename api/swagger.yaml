@@ -1,0 +1,34 @@
+basePath: /
+consumes:
+    - application/json
+definitions:
+    ProductAtListResponse:
+        x-go-package: github.com/PIRSON21/mediasoft-go/internal/dto
+info:
+    description: Documentation of Inventory API
+    title: Warehouse API
+    version: 1.0.0
+paths:
+    /products:
+        get:
+            description: '# Returns a list of products'
+            operationId: getProducts
+            responses:
+                "200":
+                    $ref: '#/responses/ProductResponse'
+                "500":
+                    $ref: '#/responses/ErrorResponse'
+            summary: GetProducts
+            tags:
+                - products
+produces:
+    - application/json
+responses:
+    ProductResponse:
+        description: ProductResponse represents a response containing product details.
+        schema:
+            items: {}
+            type: array
+schemes:
+    - http
+swagger: "2.0"

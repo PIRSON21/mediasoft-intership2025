@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"slices"
 	"strings"
 
 	"github.com/PIRSON21/mediasoft-go/internal/dto"
@@ -345,4 +346,103 @@ func parseProductIDFromQuery(r *http.Request) (string, error) {
 	}
 
 	return productID, nil
+}
+
+func (h *InventoryHandler) CalculateCart(w http.ResponseWriter, r *http.Request) {
+	log := logger.GetLogger().With(
+		zap.String("op", "handler.InventoryHandler.CalculateSum"),
+	)
+
+	cartReq, err := parseCartRequest(r.Body)
+	if err != nil {
+		log.Error("error while parsing cart", zap.Error(err))
+		custErr.UnnamedError(w, http.StatusInternalServerError, "error while parsing cart")
+		return
+	}
+
+	validErr := validateCartRequest(cartReq)
+	if validErr != nil {
+		render.JSON(w, http.StatusBadRequest, validErr)
+		return
+	}
+
+	resp, err := h.service.CalculateCart(r.Context(), cartReq)
+	if err != nil {
+		log.Error("error while calculating cart", zap.Error(err))
+		custErr.UnnamedError(w, http.StatusInternalServerError, "error while calculating cart")
+		return
+	}
+
+	render.JSON(w, http.StatusOK, resp)
+}
+
+func parseCartRequest(r io.Reader) (*dto.CartRequest, error) {
+	var cart dto.CartRequest
+
+	err := json.NewDecoder(r).Decode(&cart)
+	if err != nil {
+		return nil, err
+	}
+
+	return &cart, nil
+}
+
+func validateCartRequest(req *dto.CartRequest) map[string]any {
+	validErr := make(map[string]any)
+	var productsID []string
+
+	if req.WarehouseID == "" {
+		validErr["warehouse_id"] = "this field cannot be empty"
+	} else if err := uuid.Validate(req.WarehouseID); err != nil {
+		validErr["warehouse_id"] = "invalid warehouse ID"
+	}
+
+	if len(req.Products) == 0 {
+		validErr["products"] = "there is no products in cart"
+	} else {
+		productsErr := make(map[int]any)
+		for idx, product := range req.Products {
+			if slices.Contains(productsID, product.ProductID) {
+				productsErr[idx] = map[string]string{"product_id": "product ID must be unique"}
+				continue
+			}
+			productsID = append(productsID, product.ProductID)
+			productErr := validateProductInCart(product)
+			if productErr != nil {
+				productsErr[idx] = productErr
+			}
+		}
+
+		if len(productsErr) != 0 {
+			validErr["products"] = productsErr
+		}
+
+	}
+
+	if len(validErr) != 0 {
+		return validErr
+	}
+
+	return nil
+}
+
+func validateProductInCart(product *dto.ProductInCartRequest) map[string]string {
+	productErr := make(map[string]string)
+	if product.ProductID == "" {
+		productErr["product_id"] = "this field cannot be empty"
+	} else if err := uuid.Validate(product.ProductID); err != nil {
+		productErr["product_id"] = "invalid product ID"
+	}
+
+	if product.Count == nil {
+		productErr["product_count"] = "this field cannot be empty"
+	} else if *product.Count <= 0 {
+		productErr["product_count"] = "product count must be greater than 0"
+	}
+
+	if len(productErr) != 0 {
+		return productErr
+	}
+
+	return nil
 }

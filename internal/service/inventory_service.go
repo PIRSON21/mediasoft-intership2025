@@ -221,3 +221,98 @@ func parseProductFromWarehouseToResponse(inv *domain.Inventory) *dto.ProductFrom
 
 	return response
 }
+
+func (s *InventoryService) CalculateCart(ctx context.Context, cartReq *dto.CartRequest) (*dto.CartResponse, error) {
+	log := logger.GetLogger().With(
+		zap.String("op", "service.InventoryService.CalculateCart"),
+	)
+	_ = log
+
+	cart, err := parseCartRequestToDomain(cartReq)
+	if err != nil {
+		log.Error("error while parsing cart request to domain", zap.Error(err))
+		return nil, err
+	}
+
+	err = s.repo.GetPriceAndDiscount(ctx, cart)
+	if err != nil {
+		log.Error("error while getting price and discount from repository", zap.Error(err))
+		return nil, err
+	}
+
+	resp := parseDomainToCartResponse(cart)
+
+	return resp, nil
+}
+
+func parseCartRequestToDomain(req *dto.CartRequest) ([]*domain.Inventory, error) {
+	var inv []*domain.Inventory
+
+	warehouseID, err := uuid.Parse(req.WarehouseID)
+	if err != nil {
+		return nil, err
+	}
+	warehouse := &domain.Warehouse{
+		ID: warehouseID,
+	}
+
+	for _, v := range req.Products {
+		product, err := parseProductFromCartToDomain(v, warehouse)
+		if err != nil {
+			return nil, err
+		}
+
+		inv = append(inv, product)
+	}
+
+	return inv, nil
+}
+
+func parseProductFromCartToDomain(prod *dto.ProductInCartRequest, warehouse *domain.Warehouse) (*domain.Inventory, error) {
+	productID, err := uuid.Parse(prod.ProductID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &domain.Inventory{
+		Warehouse: warehouse,
+		Product: &domain.Product{
+			ID: productID,
+		},
+		ProductCount: *prod.Count,
+	}, nil
+}
+
+func parseDomainToCartResponse(invs []*domain.Inventory) *dto.CartResponse {
+	var (
+		resp               dto.CartResponse
+		totalPrice         float64
+		totalDiscountPrice float64
+	)
+
+	for _, inv := range invs {
+		discountPrice := inv.ProductPrice
+		if inv.ProductSale != 0 {
+			discountPrice = inv.ProductPrice - (inv.ProductPrice * float64(inv.ProductSale) / 100)
+		}
+
+		fullPrice := inv.ProductPrice * float64(inv.ProductCount)
+		discountFullPrice := discountPrice * float64(inv.ProductCount)
+
+		prod := &dto.ProductInCartResponse{
+			ProductID:         inv.Product.ID.String(),
+			Count:             inv.ProductCount,
+			FullPrice:         fullPrice,
+			PriceWithDiscount: discountFullPrice,
+		}
+		resp.Products = append(resp.Products, prod)
+
+		totalPrice += fullPrice
+		totalDiscountPrice += discountFullPrice
+	}
+
+	resp.TotalProductPrice = totalPrice
+	resp.TotalProductPriceWithDiscount = totalDiscountPrice
+
+	return &resp
+}

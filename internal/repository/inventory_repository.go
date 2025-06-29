@@ -11,4 +11,5 @@ type InventoryRepository interface {
 	ChangeProductCount(context.Context, *domain.Inventory) error
 	AddDiscountToProducts(context.Context, []*domain.Inventory) error
 	GetProductFromWarehouse(context.Context, *domain.Inventory) error
+	GetPriceAndDiscount(context.Context, []*domain.Inventory) error
 }

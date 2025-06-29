@@ -89,6 +89,13 @@ func createRouter(warehouseHandlers *handler.WarehouseHandler, productHandlers *
 		middleware.LoggingMiddleware,
 	))
 
+	mux.Handle("/inventory/check_cart", chainMiddleware(
+		http.HandlerFunc(inventoryHandlers.CalculateCart),
+		middleware.Recoverer,
+		middleware.RequestID,
+		middleware.LoggingMiddleware,
+	))
+
 	mux.Handle("/warehouse/", chainMiddleware(
 		http.HandlerFunc(inventoryHandlers.GetProductFromWarehouse),
 		middleware.Recoverer,
