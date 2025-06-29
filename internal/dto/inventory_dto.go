@@ -57,3 +57,22 @@ type ProductInCartResponse struct {
 	FullPrice         float64 `json:"product_price"`
 	PriceWithDiscount float64 `json:"product_price_with_discount"`
 }
+
+type Pagination struct {
+	Page   int
+	Offset int
+	Limit  int
+}
+
+type ProductsResponse struct {
+	Page     int              `json:"page"`
+	Limit    int              `json:"limit"`
+	Products []*ProductAtList `json:"products"`
+}
+
+type ProductAtList struct {
+	ProductID                string  `json:"product_id"`
+	ProductName              string  `json:"product_name"`
+	ProductPrice             float64 `json:"product_price"`
+	ProductPriceWithDiscount float64 `json:"product_discount_price"`
+}

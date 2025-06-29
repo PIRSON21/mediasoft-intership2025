@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"slices"
+	"strconv"
 	"strings"
 
 	"github.com/PIRSON21/mediasoft-go/internal/dto"
@@ -289,6 +290,14 @@ func validateDiscount(discount *dto.Discount) map[string]string {
 }
 
 func (h *InventoryHandler) GetProductFromWarehouse(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Query().Get("product_id") != "" {
+		h.GetOneProductFromWarehouse(w, r)
+	} else {
+		h.GetProductsAtWarehouse(w, r)
+	}
+}
+
+func (h *InventoryHandler) GetOneProductFromWarehouse(w http.ResponseWriter, r *http.Request) {
 	log := logger.GetLogger().With(
 		zap.String("op", "handler.InventoryHandler.GetProductFromWarehouse"),
 		zap.String("request-id", middleware.GetRequestID(r.Context())),
@@ -348,9 +357,55 @@ func parseProductIDFromQuery(r *http.Request) (string, error) {
 	return productID, nil
 }
 
+func (h *InventoryHandler) GetProductsAtWarehouse(w http.ResponseWriter, r *http.Request) {
+	log := logger.GetLogger().With(
+		zap.String("op", "handler.InventoryHandler.GetProducts"),
+		zap.String("request-id", middleware.GetRequestID(r.Context())),
+	)
+
+	warehouseID, err := parseWarehouseIDFromURL(r)
+	if err != nil {
+		log.Error("error while parsing warehouseID", zap.Error(err))
+		custErr.UnnamedError(w, http.StatusBadRequest, "wrong warehouseID")
+		return
+	}
+
+	params := parseParams(r)
+
+	response, err := h.service.GetProductsAtWarehouse(r.Context(), params, warehouseID)
+	if err != nil {
+		log.Error("error while getting products", zap.Error(err))
+		custErr.UnnamedError(w, http.StatusInternalServerError, "error while getting products")
+		return
+	}
+
+	render.JSON(w, http.StatusOK, response)
+}
+
+func parseParams(r *http.Request) *dto.Pagination {
+	page, err := strconv.Atoi(r.URL.Query().Get("page"))
+	if err != nil || page < 1 {
+		page = 1
+	}
+
+	limit, err := strconv.Atoi(r.URL.Query().Get("limit"))
+	if err != nil || limit < 1 {
+		limit = 10
+	}
+
+	offset := limit * (page - 1)
+
+	return &dto.Pagination{
+		Page:   page,
+		Offset: offset,
+		Limit:  limit,
+	}
+}
+
 func (h *InventoryHandler) CalculateCart(w http.ResponseWriter, r *http.Request) {
 	log := logger.GetLogger().With(
 		zap.String("op", "handler.InventoryHandler.CalculateSum"),
+		zap.String("request-id", middleware.GetRequestID(r.Context())),
 	)
 
 	cartReq, err := parseCartRequest(r.Body)

@@ -316,3 +316,44 @@ func parseDomainToCartResponse(invs []*domain.Inventory) *dto.CartResponse {
 
 	return &resp
 }
+
+func (s *InventoryService) GetProductsAtWarehouse(ctx context.Context, params *dto.Pagination, warehouseID string) (*dto.ProductsResponse, error) {
+	log := logger.GetLogger().With(
+		zap.String("op", "service.InventoryService.GetProducts"),
+	)
+
+	products, err := s.repo.GetProductsAtWarehouse(ctx, params, warehouseID)
+	if err != nil {
+		log.Error("error while getting products from repository", zap.Error(err))
+		return nil, err
+	}
+
+	resp := parseProductsToResponse(products, params)
+
+	return resp, nil
+}
+
+func parseProductsToResponse(prods []*domain.Inventory, params *dto.Pagination) *dto.ProductsResponse {
+	resp := &dto.ProductsResponse{
+		Page:     params.Page,
+		Limit:    params.Limit,
+		Products: make([]*dto.ProductAtList, 0),
+	}
+
+	for _, inv := range prods {
+		discountPrice := inv.ProductPrice
+		if inv.ProductSale != 0 {
+			discountPrice = inv.ProductPrice - (inv.ProductPrice * float64(inv.ProductSale) / 100)
+		}
+
+		prod := dto.ProductAtList{
+			ProductID:                inv.Product.ID.String(),
+			ProductName:              inv.Product.Name,
+			ProductPrice:             inv.ProductPrice,
+			ProductPriceWithDiscount: discountPrice,
+		}
+		resp.Products = append(resp.Products, &prod)
+	}
+
+	return resp
+}

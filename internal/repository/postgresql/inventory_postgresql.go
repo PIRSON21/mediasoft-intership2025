@@ -7,8 +7,10 @@ import (
 	"fmt"
 
 	"github.com/PIRSON21/mediasoft-go/internal/domain"
+	"github.com/PIRSON21/mediasoft-go/internal/dto"
 	custErr "github.com/PIRSON21/mediasoft-go/internal/errors"
 	"github.com/PIRSON21/mediasoft-go/pkg/logger"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"go.uber.org/zap"
@@ -256,4 +258,66 @@ func scanRows(rows pgx.Rows, invMap map[string]*domain.Inventory) error {
 		}
 	}
 	return nil
+}
+
+func (db *Postgres) GetProductsAtWarehouse(ctx context.Context, params *dto.Pagination, warehouseID string) ([]*domain.Inventory, error) {
+	log := logger.GetLogger().With(
+		zap.String("op", "repository.Postgres.GetProducts"),
+	)
+
+	var products []*domain.Inventory
+
+	stmt := `
+	SELECT p.product_id, p.product_name, inv.product_price, inv.product_sale
+	FROM inventory inv
+	JOIN product p USING (product_id)
+	WHERE inv.warehouse_id = $1
+	OFFSET $2
+	LIMIT $3
+	`
+
+	rows, err := db.pool.Query(ctx, stmt, warehouseID, params.Offset, params.Limit)
+	if err != nil {
+		log.Error("error while executing statement", zap.Error(err))
+		return nil, err
+	}
+
+	for rows.Next() {
+		var (
+			id    string
+			name  string
+			price sql.NullFloat64
+			sale  sql.NullInt64
+		)
+
+		err = rows.Scan(&id, &name, &price, &sale)
+		if err != nil {
+			continue
+		}
+
+		productID, _ := uuid.Parse(id)
+
+		prod := &domain.Inventory{
+			Product: &domain.Product{
+				ID:   productID,
+				Name: name,
+			},
+		}
+
+		if price.Valid {
+			prod.ProductPrice = float64(price.Float64)
+		}
+		if sale.Valid {
+			prod.ProductSale = int(sale.Int64)
+		}
+
+		products = append(products, prod)
+	}
+
+	if rows.Err() != nil {
+		log.Error("error after scanning rows", zap.Error(rows.Err()))
+		return nil, rows.Err()
+	}
+
+	return products, nil
 }
