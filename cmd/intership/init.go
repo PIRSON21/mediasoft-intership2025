@@ -5,12 +5,12 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/PIRSON21/mediasoft-go/internal/handler"
-	"github.com/PIRSON21/mediasoft-go/internal/middleware"
-	"github.com/PIRSON21/mediasoft-go/internal/repository"
-	"github.com/PIRSON21/mediasoft-go/internal/service"
-	"github.com/PIRSON21/mediasoft-go/pkg/config"
-	"github.com/PIRSON21/mediasoft-go/pkg/logger"
+	"github.com/PIRSON21/mediasoft-intership2025/internal/handler"
+	"github.com/PIRSON21/mediasoft-intership2025/internal/middleware"
+	"github.com/PIRSON21/mediasoft-intership2025/internal/repository"
+	"github.com/PIRSON21/mediasoft-intership2025/internal/service"
+	"github.com/PIRSON21/mediasoft-intership2025/pkg/config"
+	"github.com/PIRSON21/mediasoft-intership2025/pkg/logger"
 	"go.uber.org/zap"
 )
 
@@ -91,6 +91,13 @@ func createRouter(warehouseHandlers *handler.WarehouseHandler, productHandlers *
 
 	mux.Handle("/inventory/check_cart", chainMiddleware(
 		http.HandlerFunc(inventoryHandlers.CalculateCart),
+		middleware.Recoverer,
+		middleware.RequestID,
+		middleware.LoggingMiddleware,
+	))
+
+	mux.Handle("/inventory/buy", chainMiddleware(
+		http.HandlerFunc(inventoryHandlers.BuyProducts),
 		middleware.Recoverer,
 		middleware.RequestID,
 		middleware.LoggingMiddleware,

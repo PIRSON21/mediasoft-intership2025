@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/PIRSON21/mediasoft-go/internal/domain"
-	"github.com/PIRSON21/mediasoft-go/internal/dto"
-	"github.com/PIRSON21/mediasoft-go/internal/repository"
-	"github.com/PIRSON21/mediasoft-go/pkg/logger"
+	"github.com/PIRSON21/mediasoft-intership2025/internal/domain"
+	"github.com/PIRSON21/mediasoft-intership2025/internal/dto"
+	"github.com/PIRSON21/mediasoft-intership2025/internal/repository"
+	"github.com/PIRSON21/mediasoft-intership2025/pkg/logger"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
@@ -356,4 +356,26 @@ func parseProductsToResponse(prods []*domain.Inventory, params *dto.Pagination) 
 	}
 
 	return resp
+}
+
+func (s *InventoryService) BuyProducts(ctx context.Context, cart *dto.CartRequest) (*dto.CartResponse, error) {
+	log := logger.GetLogger().With(
+		zap.String("op", "service.InventoryService.BuyProducts"),
+	)
+
+	invs, err := parseCartRequestToDomain(cart)
+	if err != nil {
+		log.Error("error while parsing cart to domain", zap.Error(err))
+		return nil, err
+	}
+
+	err = s.repo.BuyProducts(ctx, invs)
+	if err != nil {
+		log.Error("error while changing products count in repository", zap.Error(err))
+		return nil, err
+	}
+
+	response := parseDomainToCartResponse(invs)
+
+	return response, nil
 }

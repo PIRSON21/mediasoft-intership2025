@@ -6,10 +6,10 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/PIRSON21/mediasoft-go/internal/domain"
-	"github.com/PIRSON21/mediasoft-go/internal/dto"
-	custErr "github.com/PIRSON21/mediasoft-go/internal/errors"
-	"github.com/PIRSON21/mediasoft-go/pkg/logger"
+	"github.com/PIRSON21/mediasoft-intership2025/internal/domain"
+	"github.com/PIRSON21/mediasoft-intership2025/internal/dto"
+	custErr "github.com/PIRSON21/mediasoft-intership2025/internal/errors"
+	"github.com/PIRSON21/mediasoft-intership2025/pkg/logger"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -320,4 +320,143 @@ func (db *Postgres) GetProductsAtWarehouse(ctx context.Context, params *dto.Pagi
 	}
 
 	return products, nil
+}
+
+func (db *Postgres) BuyProducts(ctx context.Context, inventories []*domain.Inventory) error {
+	log := logger.GetLogger().With(
+		zap.String("op", "repository.Postgres.BuyProducts"),
+	)
+
+	if len(inventories) == 0 {
+		return nil
+	}
+
+	tx, err := db.pool.Begin(ctx)
+	if err != nil {
+		log.Error("error while beginning transaction", zap.Error(err))
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	err = validateProductCount(ctx, tx, inventories)
+	if err != nil {
+		log.Error("error while validating product count", zap.Error(err))
+		return err
+	}
+
+	err = updateProductCount(ctx, tx, inventories)
+	if err != nil {
+		log.Error("error while updating product count", zap.Error(err))
+		return err
+	}
+
+	return tx.Commit(ctx)
+}
+
+func validateProductCount(ctx context.Context, tx pgx.Tx, invs []*domain.Inventory) error {
+	warehouseID := invs[0].Warehouse.ID.String()
+	products := make([]string, 0, len(invs))
+	countMap := make(map[string]int, len(invs))
+	invMap := make(map[string]*domain.Inventory, len(invs))
+
+	for _, inv := range invs {
+		productID := inv.Product.ID.String()
+		products = append(products, productID)
+		countMap[productID] = inv.ProductCount
+		invMap[productID] = inv
+	}
+
+	stmt := `
+	SELECT product_id, product_count, product_price, product_sale
+	FROM inventory
+	WHERE warehouse_id = $1 AND product_id = ANY($2)
+	FOR UPDATE
+	`
+
+	rows, err := tx.Query(ctx, stmt, warehouseID, products)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	err = processRows(rows, invMap)
+	if err != nil {
+		return err
+	}
+
+	if rows.Err() != nil {
+		return rows.Err()
+	}
+
+	rows.Close()
+	tag := rows.CommandTag()
+	if int(tag.RowsAffected()) != len(invs) {
+		return custErr.ErrNotFoundProductAtWarehouse
+	}
+
+	return nil
+}
+
+func processRows(rows pgx.Rows, invMap map[string]*domain.Inventory) error {
+	for rows.Next() {
+		var (
+			dbProductID string
+			dbCount     sql.NullInt64
+			dbPrice     sql.NullFloat64
+			dbSale      sql.NullInt64
+		)
+
+		err := rows.Scan(&dbProductID, &dbCount, &dbPrice, &dbSale)
+		if err != nil {
+			continue
+		}
+
+		if !dbCount.Valid {
+			return custErr.ErrNotEnoughProductCount
+		}
+
+		currentInv, ok := invMap[dbProductID]
+		if !ok {
+			continue
+		}
+
+		if int(dbCount.Int64) < currentInv.ProductCount {
+			return custErr.ErrNotEnoughProductCount
+		}
+
+		if dbPrice.Valid {
+			currentInv.ProductPrice = dbPrice.Float64
+		}
+
+		if dbSale.Valid {
+			currentInv.ProductSale = int(dbSale.Int64)
+		}
+
+	}
+	return nil
+}
+
+func updateProductCount(ctx context.Context, tx pgx.Tx, invs []*domain.Inventory) error {
+	warehouseID := invs[0].Warehouse.ID.String()
+	for _, inv := range invs {
+		productID := inv.Product.ID.String()
+		want := inv.ProductCount
+
+		stmt := `
+		UPDATE inventory
+		SET	product_count = product_count - $1
+		WHERE warehouse_id = $2 AND product_id = $3 AND product_count >= $1
+		`
+
+		tag, err := tx.Exec(ctx, stmt, want, warehouseID, productID)
+		if err != nil {
+			return err
+		}
+
+		if tag.RowsAffected() < 1 {
+			return custErr.ErrNotEnoughProductCount
+		}
+	}
+
+	return nil
 }

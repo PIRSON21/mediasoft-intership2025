@@ -3,8 +3,8 @@ package middleware
 import (
 	"net/http"
 
-	custErr "github.com/PIRSON21/mediasoft-go/internal/errors"
-	"github.com/PIRSON21/mediasoft-go/pkg/logger"
+	custErr "github.com/PIRSON21/mediasoft-intership2025/internal/errors"
+	"github.com/PIRSON21/mediasoft-intership2025/pkg/logger"
 	"go.uber.org/zap"
 )
 

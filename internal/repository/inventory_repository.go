@@ -3,8 +3,8 @@ package repository
 import (
 	"context"
 
-	"github.com/PIRSON21/mediasoft-go/internal/domain"
-	"github.com/PIRSON21/mediasoft-go/internal/dto"
+	"github.com/PIRSON21/mediasoft-intership2025/internal/domain"
+	"github.com/PIRSON21/mediasoft-intership2025/internal/dto"
 )
 
 type InventoryRepository interface {
@@ -14,4 +14,5 @@ type InventoryRepository interface {
 	GetProductFromWarehouse(context.Context, *domain.Inventory) error
 	GetPriceAndDiscount(context.Context, []*domain.Inventory) error
 	GetProductsAtWarehouse(context.Context, *dto.Pagination, string) ([]*domain.Inventory, error)
+	BuyProducts(context.Context, []*domain.Inventory) error
 }

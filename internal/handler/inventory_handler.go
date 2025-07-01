@@ -10,12 +10,12 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/PIRSON21/mediasoft-go/internal/dto"
-	custErr "github.com/PIRSON21/mediasoft-go/internal/errors"
-	"github.com/PIRSON21/mediasoft-go/internal/middleware"
-	"github.com/PIRSON21/mediasoft-go/internal/service"
-	"github.com/PIRSON21/mediasoft-go/pkg/logger"
-	"github.com/PIRSON21/mediasoft-go/pkg/render"
+	"github.com/PIRSON21/mediasoft-intership2025/internal/dto"
+	custErr "github.com/PIRSON21/mediasoft-intership2025/internal/errors"
+	"github.com/PIRSON21/mediasoft-intership2025/internal/middleware"
+	"github.com/PIRSON21/mediasoft-intership2025/internal/service"
+	"github.com/PIRSON21/mediasoft-intership2025/pkg/logger"
+	"github.com/PIRSON21/mediasoft-intership2025/pkg/render"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
@@ -500,4 +500,38 @@ func validateProductInCart(product *dto.ProductInCartRequest) map[string]string 
 	}
 
 	return nil
+}
+
+func (h *InventoryHandler) BuyProducts(w http.ResponseWriter, r *http.Request) {
+	log := logger.GetLogger().With(
+		zap.String("op", "handler.InventoryHandler.BuyProducts"),
+		zap.String("request-id", middleware.GetRequestID(r.Context())),
+	)
+
+	cart, err := parseCartRequest(r.Body)
+	if err != nil {
+		log.Error("error while parsing cart", zap.Error(err))
+		custErr.UnnamedError(w, http.StatusUnprocessableEntity, "wrong request body")
+		return
+	}
+
+	validErr := validateCartRequest(cart)
+	if validErr != nil {
+		render.JSON(w, http.StatusBadRequest, validErr)
+		return
+	}
+
+	// TODO: добавить аналитику
+	response, err := h.service.BuyProducts(r.Context(), cart)
+	if err != nil {
+		if custErr.Any(err, custErr.ErrNotEnoughProductCount, custErr.ErrNotFoundProductAtWarehouse) {
+			custErr.UnnamedError(w, http.StatusBadRequest, err.Error())
+			return
+		}
+		log.Error("error in service module", zap.Error(err))
+		custErr.UnnamedError(w, http.StatusInternalServerError, "error while buying products")
+		return
+	}
+
+	render.JSON(w, http.StatusOK, response)
 }

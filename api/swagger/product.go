@@ -1,6 +1,6 @@
 package swagger
 
-import "github.com/PIRSON21/mediasoft-go/internal/dto"
+import "github.com/PIRSON21/mediasoft-intership2025/internal/dto"
 
 // ProductResponse represents a response containing product details.
 // swagger:response ProductResponse

@@ -7,12 +7,12 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/PIRSON21/mediasoft-go/internal/dto"
-	custErr "github.com/PIRSON21/mediasoft-go/internal/errors"
-	"github.com/PIRSON21/mediasoft-go/internal/middleware"
-	"github.com/PIRSON21/mediasoft-go/internal/service"
-	"github.com/PIRSON21/mediasoft-go/pkg/logger"
-	"github.com/PIRSON21/mediasoft-go/pkg/render"
+	"github.com/PIRSON21/mediasoft-intership2025/internal/dto"
+	custErr "github.com/PIRSON21/mediasoft-intership2025/internal/errors"
+	"github.com/PIRSON21/mediasoft-intership2025/internal/middleware"
+	"github.com/PIRSON21/mediasoft-intership2025/internal/service"
+	"github.com/PIRSON21/mediasoft-intership2025/pkg/logger"
+	"github.com/PIRSON21/mediasoft-intership2025/pkg/render"
 	"go.uber.org/zap"
 )
 

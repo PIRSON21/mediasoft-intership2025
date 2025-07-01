@@ -3,7 +3,7 @@ consumes:
     - application/json
 definitions:
     ProductAtListResponse:
-        x-go-package: github.com/PIRSON21/mediasoft-go/internal/dto
+        x-go-package: github.com/PIRSON21/mediasoft-intership2025/internal/dto
 info:
     description: Documentation of Inventory API
     title: Warehouse API
