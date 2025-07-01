@@ -14,6 +14,8 @@ type Repository interface {
 	WarehouseRepository
 	ProductRepository
 	InventoryRepository
+
+	AnalyticsRepository
 }
 
 func MustInitRepository(ctx context.Context, dbCfg config.DBConfig) Repository {

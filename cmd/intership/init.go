@@ -31,6 +31,7 @@ func initApp() {
 
 	// инициализация services
 	zlog.Debug("setting up the services")
+	analyticsService := service.NewAnalyticsService(repo)
 
 	// инициализация handlers
 	zlog.Debug("setting up the handlers")
@@ -38,17 +39,18 @@ func initApp() {
 		Service: service.NewWarehouseService(repo),
 	}
 	productHandlers := handler.NewProductHandler(*service.NewProductService(repo, cfg.Address))
-	inventoryHandlers := handler.NewInventoryHandler(service.NewInventoryService(repo))
+	inventoryHandlers := handler.NewInventoryHandler(service.NewInventoryService(repo, analyticsService))
+	analyticsHandler := handler.NewAnalyticsHandler(analyticsService)
 
 	// задание роутингов
-	mux := createRouter(warehouseHandlers, productHandlers, inventoryHandlers)
+	mux := createRouter(warehouseHandlers, productHandlers, inventoryHandlers, analyticsHandler)
 
 	// запуск сервера TODO: убрать отсюда
 	zlog.Info("server ready to start", zap.String("addr", cfg.Address))
 	http.ListenAndServe(cfg.Address, mux)
 }
 
-func createRouter(warehouseHandlers *handler.WarehouseHandler, productHandlers *handler.ProductHandler, inventoryHandlers *handler.InventoryHandler) *http.ServeMux {
+func createRouter(warehouseHandlers *handler.WarehouseHandler, productHandlers *handler.ProductHandler, inventoryHandlers *handler.InventoryHandler, analyticsHandlers *handler.AnalyticsHandler) *http.ServeMux {
 	mux := http.NewServeMux()
 
 	// warehouses
@@ -112,6 +114,21 @@ func createRouter(warehouseHandlers *handler.WarehouseHandler, productHandlers *
 
 	mux.Handle("/inventory", chainMiddleware(
 		http.HandlerFunc(inventoryHandlers.CreateInventory),
+		middleware.Recoverer,
+		middleware.RequestID,
+		middleware.LoggingMiddleware,
+	))
+
+	// analytics
+	mux.Handle("/analytics/", chainMiddleware(
+		http.HandlerFunc(analyticsHandlers.GetWarehouseAnalytics),
+		middleware.Recoverer,
+		middleware.RequestID,
+		middleware.LoggingMiddleware,
+	))
+
+	mux.Handle("/analytics/top_warehouses", chainMiddleware(
+		http.HandlerFunc(analyticsHandlers.GetTopWarehouses),
 		middleware.Recoverer,
 		middleware.RequestID,
 		middleware.LoggingMiddleware,

@@ -13,12 +13,14 @@ import (
 )
 
 type InventoryService struct {
-	repo repository.InventoryRepository
+	analytics *AnalyticsService
+	repo      repository.InventoryRepository
 }
 
-func NewInventoryService(repo repository.InventoryRepository) *InventoryService {
+func NewInventoryService(repo repository.InventoryRepository, analytics *AnalyticsService) *InventoryService {
 	return &InventoryService{
-		repo: repo,
+		analytics: analytics,
+		repo:      repo,
 	}
 }
 
@@ -374,6 +376,8 @@ func (s *InventoryService) BuyProducts(ctx context.Context, cart *dto.CartReques
 		log.Error("error while changing products count in repository", zap.Error(err))
 		return nil, err
 	}
+
+	go s.analytics.AddProductSell(invs)
 
 	response := parseDomainToCartResponse(invs)
 
