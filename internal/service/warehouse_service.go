@@ -3,10 +3,10 @@ package service
 import (
 	"context"
 
-	"github.com/PIRSON21/mediasoft-go/internal/domain"
-	"github.com/PIRSON21/mediasoft-go/internal/dto"
-	"github.com/PIRSON21/mediasoft-go/internal/repository"
-	"github.com/PIRSON21/mediasoft-go/pkg/logger"
+	"github.com/PIRSON21/mediasoft-intership2025/internal/domain"
+	"github.com/PIRSON21/mediasoft-intership2025/internal/dto"
+	"github.com/PIRSON21/mediasoft-intership2025/internal/repository"
+	"github.com/PIRSON21/mediasoft-intership2025/pkg/logger"
 	"go.uber.org/zap"
 )
 
@@ -38,7 +38,7 @@ func createWarehouseListResponse(warehouses []*domain.Warehouse) []*dto.Warehous
 
 	for _, v := range warehouses {
 		warehousesResp = append(warehousesResp, &dto.WarehouseAtListResponse{
-			ID:      v.ID,
+			ID:      v.ID.String(),
 			Address: v.Address,
 		})
 	}

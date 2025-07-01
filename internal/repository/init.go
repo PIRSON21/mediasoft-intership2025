@@ -4,15 +4,16 @@ import (
 	"context"
 	"os"
 
-	"github.com/PIRSON21/mediasoft-go/internal/repository/postgresql"
-	"github.com/PIRSON21/mediasoft-go/pkg/config"
-	"github.com/PIRSON21/mediasoft-go/pkg/logger"
+	"github.com/PIRSON21/mediasoft-intership2025/internal/repository/postgresql"
+	"github.com/PIRSON21/mediasoft-intership2025/pkg/config"
+	"github.com/PIRSON21/mediasoft-intership2025/pkg/logger"
 	"go.uber.org/zap"
 )
 
 type Repository interface {
 	WarehouseRepository
 	ProductRepository
+	InventoryRepository
 }
 
 func MustInitRepository(ctx context.Context, dbCfg config.DBConfig) Repository {

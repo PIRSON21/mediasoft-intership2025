@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/PIRSON21/mediasoft-go/pkg/config"
-	"github.com/PIRSON21/mediasoft-go/pkg/logger"
+	"github.com/PIRSON21/mediasoft-intership2025/pkg/config"
+	"github.com/PIRSON21/mediasoft-intership2025/pkg/logger"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.uber.org/zap"
 )

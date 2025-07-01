@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/PIRSON21/mediasoft-go/internal/domain"
-	custErr "github.com/PIRSON21/mediasoft-go/internal/errors"
-	"github.com/PIRSON21/mediasoft-go/pkg/logger"
+	"github.com/PIRSON21/mediasoft-intership2025/internal/domain"
+	custErr "github.com/PIRSON21/mediasoft-intership2025/internal/errors"
+	"github.com/PIRSON21/mediasoft-intership2025/pkg/logger"
 	"github.com/jackc/pgx/v5/pgconn"
 	"go.uber.org/zap"
 )

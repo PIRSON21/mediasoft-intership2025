@@ -1,6 +1,8 @@
 package domain
 
+import "github.com/google/uuid"
+
 type Warehouse struct {
-	ID      int    `json:"warehouse_id"`
-	Address string `json:"warehouse_address"`
+	ID      uuid.UUID
+	Address string
 }

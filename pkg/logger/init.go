@@ -3,7 +3,7 @@ package logger
 import (
 	"log"
 
-	"github.com/PIRSON21/mediasoft-go/pkg/config"
+	"github.com/PIRSON21/mediasoft-intership2025/pkg/config"
 	"go.uber.org/zap"
 )
 

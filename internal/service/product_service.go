@@ -7,10 +7,11 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/PIRSON21/mediasoft-go/internal/domain"
-	"github.com/PIRSON21/mediasoft-go/internal/dto"
-	"github.com/PIRSON21/mediasoft-go/internal/repository"
-	"github.com/PIRSON21/mediasoft-go/pkg/logger"
+	"github.com/PIRSON21/mediasoft-intership2025/internal/domain"
+	"github.com/PIRSON21/mediasoft-intership2025/internal/dto"
+	"github.com/PIRSON21/mediasoft-intership2025/internal/repository"
+	"github.com/PIRSON21/mediasoft-intership2025/pkg/logger"
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
 
@@ -55,7 +56,7 @@ func (s *ProductService) createProductsResponse(products []*domain.Product) []*d
 	for _, v := range products {
 		params := copyMap(v.Params)
 		response = append(response, &dto.ProductAtListResponse{
-			ID:          v.ID,
+			ID:          v.ID.String(),
 			Weight:      v.Weight,
 			Name:        v.Name,
 			Description: v.Description,
@@ -127,7 +128,7 @@ func parseProductFromRequest(req *dto.ProductRequest, filename string) *domain.P
 	}
 }
 
-func (s *ProductService) UpdateProduct(ctx context.Context, productID int, productReq *dto.ProductRequest) error {
+func (s *ProductService) UpdateProduct(ctx context.Context, productID uuid.UUID, productReq *dto.ProductRequest) error {
 	log := logger.GetLogger().With(zap.String("op", "service.ProductService.UpdateProduct"))
 
 	var fileName string

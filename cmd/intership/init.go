@@ -5,12 +5,12 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/PIRSON21/mediasoft-go/internal/handler"
-	"github.com/PIRSON21/mediasoft-go/internal/middleware"
-	"github.com/PIRSON21/mediasoft-go/internal/repository"
-	"github.com/PIRSON21/mediasoft-go/internal/service"
-	"github.com/PIRSON21/mediasoft-go/pkg/config"
-	"github.com/PIRSON21/mediasoft-go/pkg/logger"
+	"github.com/PIRSON21/mediasoft-intership2025/internal/handler"
+	"github.com/PIRSON21/mediasoft-intership2025/internal/middleware"
+	"github.com/PIRSON21/mediasoft-intership2025/internal/repository"
+	"github.com/PIRSON21/mediasoft-intership2025/internal/service"
+	"github.com/PIRSON21/mediasoft-intership2025/pkg/config"
+	"github.com/PIRSON21/mediasoft-intership2025/pkg/logger"
 	"go.uber.org/zap"
 )
 
@@ -38,22 +38,24 @@ func initApp() {
 		Service: service.NewWarehouseService(repo),
 	}
 	productHandlers := handler.NewProductHandler(*service.NewProductService(repo, cfg.Address))
+	inventoryHandlers := handler.NewInventoryHandler(service.NewInventoryService(repo))
 
 	// задание роутингов
-	mux := createRouter(warehouseHandlers, productHandlers)
+	mux := createRouter(warehouseHandlers, productHandlers, inventoryHandlers)
 
 	// запуск сервера TODO: убрать отсюда
 	zlog.Info("server ready to start", zap.String("addr", cfg.Address))
 	http.ListenAndServe(cfg.Address, mux)
 }
 
-func createRouter(warehouseHandlers *handler.WarehouseHandler, productHandlers *handler.ProductHandler) *http.ServeMux {
+func createRouter(warehouseHandlers *handler.WarehouseHandler, productHandlers *handler.ProductHandler, inventoryHandlers *handler.InventoryHandler) *http.ServeMux {
 	mux := http.NewServeMux()
 
 	// warehouses
 	mux.Handle("/warehouses", chainMiddleware(
 		http.HandlerFunc(warehouseHandlers.WarehousesHandler),
 		middleware.Recoverer,
+		middleware.RequestID,
 		middleware.LoggingMiddleware,
 	))
 
@@ -61,12 +63,57 @@ func createRouter(warehouseHandlers *handler.WarehouseHandler, productHandlers *
 	mux.Handle("/products", chainMiddleware(
 		http.HandlerFunc(productHandlers.ProductsHandler),
 		middleware.Recoverer,
+		middleware.RequestID,
 		middleware.LoggingMiddleware,
 	))
 
 	mux.Handle("/product/", chainMiddleware(
 		http.HandlerFunc(productHandlers.UpdateProduct),
 		middleware.Recoverer,
+		middleware.RequestID,
+		middleware.LoggingMiddleware,
+	))
+
+	// inventory
+	mux.Handle("/inventory/change_count", chainMiddleware(
+		http.HandlerFunc(inventoryHandlers.ChangeProductCount),
+		middleware.Recoverer,
+		middleware.RequestID,
+		middleware.LoggingMiddleware,
+	))
+
+	mux.Handle("/inventory/add_discount", chainMiddleware(
+		http.HandlerFunc(inventoryHandlers.AddDiscountToProduct),
+		middleware.Recoverer,
+		middleware.RequestID,
+		middleware.LoggingMiddleware,
+	))
+
+	mux.Handle("/inventory/check_cart", chainMiddleware(
+		http.HandlerFunc(inventoryHandlers.CalculateCart),
+		middleware.Recoverer,
+		middleware.RequestID,
+		middleware.LoggingMiddleware,
+	))
+
+	mux.Handle("/inventory/buy", chainMiddleware(
+		http.HandlerFunc(inventoryHandlers.BuyProducts),
+		middleware.Recoverer,
+		middleware.RequestID,
+		middleware.LoggingMiddleware,
+	))
+
+	mux.Handle("/warehouse/", chainMiddleware(
+		http.HandlerFunc(inventoryHandlers.GetProductFromWarehouse),
+		middleware.Recoverer,
+		middleware.RequestID,
+		middleware.LoggingMiddleware,
+	))
+
+	mux.Handle("/inventory", chainMiddleware(
+		http.HandlerFunc(inventoryHandlers.CreateInventory),
+		middleware.Recoverer,
+		middleware.RequestID,
 		middleware.LoggingMiddleware,
 	))
 

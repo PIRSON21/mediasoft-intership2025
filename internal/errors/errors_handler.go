@@ -2,6 +2,7 @@ package errors
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 )
 
@@ -20,4 +21,14 @@ func UnnamedError(w http.ResponseWriter, statusCode int, errMessages ...string) 
 	}
 
 	return json.NewEncoder(w).Encode(response)
+}
+
+func Any(err error, targets ...error) bool {
+	for _, target := range targets {
+		if errors.Is(err, target) {
+			return true
+		}
+	}
+
+	return false
 }

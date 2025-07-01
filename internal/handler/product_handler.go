@@ -8,11 +8,13 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/PIRSON21/mediasoft-go/internal/dto"
-	custErr "github.com/PIRSON21/mediasoft-go/internal/errors"
-	"github.com/PIRSON21/mediasoft-go/internal/service"
-	"github.com/PIRSON21/mediasoft-go/pkg/logger"
-	"github.com/PIRSON21/mediasoft-go/pkg/render"
+	"github.com/PIRSON21/mediasoft-intership2025/internal/dto"
+	custErr "github.com/PIRSON21/mediasoft-intership2025/internal/errors"
+	"github.com/PIRSON21/mediasoft-intership2025/internal/middleware"
+	"github.com/PIRSON21/mediasoft-intership2025/internal/service"
+	"github.com/PIRSON21/mediasoft-intership2025/pkg/logger"
+	"github.com/PIRSON21/mediasoft-intership2025/pkg/render"
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
 
@@ -38,7 +40,10 @@ func (h *ProductHandler) ProductsHandler(w http.ResponseWriter, r *http.Request)
 }
 
 func (h *ProductHandler) GetProducts(w http.ResponseWriter, r *http.Request) {
-	log := logger.GetLogger().With(zap.String("op", "handler.ProductHandler.GetProducts"))
+	log := logger.GetLogger().With(
+		zap.String("op", "handler.ProductHandler.GetProducts"),
+		zap.String("request-id", middleware.GetRequestID(r.Context())),
+	)
 
 	productResponse, err := h.service.GetProducts(r.Context())
 	if err != nil {
@@ -56,7 +61,10 @@ func (h *ProductHandler) GetProducts(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *ProductHandler) AddProduct(w http.ResponseWriter, r *http.Request) {
-	log := logger.GetLogger().With(zap.String("op", "handler.ProductHandler.AddProduct"))
+	log := logger.GetLogger().With(
+		zap.String("op", "handler.ProductHandler.AddProduct"),
+		zap.String("request-id", middleware.GetRequestID(r.Context())),
+	)
 
 	productRequest, err := parseProduct(r)
 	if err != nil {
@@ -185,15 +193,13 @@ func (h *ProductHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func parseProductID(r *http.Request) (int, error) {
+func parseProductID(r *http.Request) (uuid.UUID, error) {
 	splits := strings.Split(r.URL.Path, "/")
-	productID, err := strconv.Atoi(splits[len(splits)-1])
-	if err != nil {
-		return 0, err
-	}
+	productIDStr := splits[len(splits)-1]
 
-	if productID <= 0 {
-		return 0, fmt.Errorf("id cannot be less than 1")
+	productID, err := uuid.Parse(productIDStr)
+	if err != nil {
+		return uuid.UUID{}, err
 	}
 
 	return productID, nil

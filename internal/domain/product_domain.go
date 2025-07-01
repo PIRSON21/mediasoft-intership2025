@@ -1,7 +1,9 @@
 package domain
 
+import "github.com/google/uuid"
+
 type Product struct {
-	ID          int
+	ID          uuid.UUID
 	Weight      float64
 	Name        string
 	Description string
