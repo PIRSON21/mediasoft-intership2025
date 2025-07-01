@@ -1,4 +1,4 @@
-module github.com/PIRSON21/mediasoft-go
+module github.com/PIRSON21/mediasoft-intership2025
 
 go 1.24.3
 
