@@ -1,9 +1,9 @@
 # Технические требования
-- [ ] Проект оформляется по стандарту [golang-project-layout](https://github.com/golang-standards/project-layout)
+- [x] Проект оформляется по стандарту [golang-project-layout](https://github.com/golang-standards/project-layout)
 - [x] Версия компилятора golang 1.24
 - [x] В качестве базы данных используется PostgreSQL версии 16 или выше
 - [x] Для осуществления запросов в БД использовать драйвер и библиотеку [pgx/v5](https://github.com/jackc/pgx)
-- [ ] Мигратор базы данных - [golang-migrate](https://github.com/golang-migrate/migrate)
+- [x] Мигратор базы данных - [golang-migrate](https://github.com/golang-migrate/migrate)
 - [x] Логгер - [zap](https://github.com/uber-go/zap)
 - [ ] Проект должен собираться в docker-compose.
 - [ ] Как минимум три образа:
@@ -12,7 +12,7 @@
   - [ ] Сервис для миграции базы данных
 - [ ] Проект должен быть оформлен по чистой архитектуре. Должны применяться принципы SOLID.
 - [ ] У сервиса должен быть health-check http запрос `[GET] /api/health`
-- [ ] Для работы с http использовать стандартную библиотеку `net/http`
-- [ ] Использовать паттерн Graceful Shutdown для корректного завершения работы сервиса
-- [ ] В БД в качестве первичного ключа использовать `uuid`. Использовать [google/uuid](https://github.com/google/uuid)
+- [x] Для работы с http использовать стандартную библиотеку `net/http`
+- [x] Использовать паттерн Graceful Shutdown для корректного завершения работы сервиса
+- [x] В БД в качестве первичного ключа использовать `uuid`. Использовать [google/uuid](https://github.com/google/uuid)
 - [ ] В репозитории должна быть swagger документация

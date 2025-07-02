@@ -20,37 +20,41 @@ import (
 
 func startApp() {
 	cfg := config.MustParseConfig()
-	log.Println("config successfully parsed", cfg)
+	log.Println("config successfully parsed")
 
 	logger.MustCreateLogger(cfg.LoggerConfig)
 
 	zlog := logger.GetLogger()
-	zlog.Info("logger successfully set up")
+	zlog.Debug("logger successfully set up")
+	zlog.Info("starting mediasoft-intership2025", zap.String("version", version), zap.String("environment", cfg.Environment))
 
 	// подключение repositories
-	zlog.Info("trying to connect to repositories")
+	zlog.Debug("trying to connect to repositories")
 	repo := repository.MustInitRepository(context.Background(), cfg.DBConfig)
 	defer repo.Close()
 
-	zlog.Info("repositories set up successfully")
+	zlog.Debug("repositories set up successfully")
 
 	// инициализация services
 	zlog.Debug("setting up the services")
+	warehouseService := service.NewWarehouseService(repo)
+	productService := service.NewProductService(repo, cfg.Address)
 	analyticsService := service.NewAnalyticsService(repo)
+	inventoryService := service.NewInventoryService(repo, analyticsService)
 
 	// инициализация handlers
 	zlog.Debug("setting up the handlers")
-	warehouseHandlers := &handler.WarehouseHandler{
-		Service: service.NewWarehouseService(repo),
-	}
-	productHandlers := handler.NewProductHandler(*service.NewProductService(repo, cfg.Address))
-	inventoryHandlers := handler.NewInventoryHandler(service.NewInventoryService(repo, analyticsService))
+	warehouseHandlers := handler.NewWarehouseHandler(warehouseService)
+	productHandlers := handler.NewProductHandler(productService)
+	inventoryHandlers := handler.NewInventoryHandler(inventoryService)
 	analyticsHandler := handler.NewAnalyticsHandler(analyticsService)
 
 	// задание роутингов
+	zlog.Debug("creating router")
 	mux := createRouter(warehouseHandlers, productHandlers, inventoryHandlers, analyticsHandler)
 
 	// создание сервера
+	zlog.Debug("creating server")
 	srv := http.Server{
 		Addr:    cfg.Address,
 		Handler: mux,
@@ -73,7 +77,7 @@ func startApp() {
 		close(stopCh)
 	}()
 
-	// запуск сервера TODO: убрать отсюда
+	// запуск сервера
 	zlog.Info("server ready to start", zap.String("addr", cfg.Address))
 	if err := srv.ListenAndServe(); err != http.ErrServerClosed {
 		zlog.Fatal("server error", zap.Error(err))
@@ -84,6 +88,15 @@ func startApp() {
 
 func createRouter(warehouseHandlers *handler.WarehouseHandler, productHandlers *handler.ProductHandler, inventoryHandlers *handler.InventoryHandler, analyticsHandlers *handler.AnalyticsHandler) *http.ServeMux {
 	mux := http.NewServeMux()
+
+	// health check
+	mux.HandleFunc("/api/health", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+	})
 
 	// warehouses
 	mux.Handle("/warehouses", chainMiddleware(

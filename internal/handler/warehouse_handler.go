@@ -20,12 +20,20 @@ type WarehouseHandler struct {
 	Service *service.WarehouseService
 }
 
+func NewWarehouseHandler(s *service.WarehouseService) *WarehouseHandler {
+	return &WarehouseHandler{
+		Service: s,
+	}
+}
+
 func (h *WarehouseHandler) WarehousesHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 		h.GetWarehouses(w, r)
 	case http.MethodPost:
 		h.CreateWarehouse(w, r)
+	default:
+		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
 }
 

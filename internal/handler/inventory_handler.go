@@ -36,6 +36,11 @@ func (h *InventoryHandler) CreateInventory(w http.ResponseWriter, r *http.Reques
 		zap.String("request-id", middleware.GetRequestID(r.Context())),
 	)
 
+	if r.Method != http.MethodPost {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+
 	invRequest, err := parseInventory(r.Body)
 	if err != nil {
 		custErr.UnnamedError(w, http.StatusBadRequest, "error while parsing body")
@@ -116,6 +121,11 @@ func (h *InventoryHandler) ChangeProductCount(w http.ResponseWriter, r *http.Req
 		zap.String("request-id", middleware.GetRequestID(r.Context())),
 	)
 
+	if r.Method != http.MethodPost {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+
 	prodReq, err := parseChangeProductCountRequest(r.Body)
 	if err != nil {
 		log.Error("error while parsing JSON", zap.Error(err))
@@ -186,6 +196,11 @@ func (h *InventoryHandler) AddDiscountToProduct(w http.ResponseWriter, r *http.R
 		zap.String("op", "handler.InventoryHandler.AddDiscountToProduct"),
 		zap.String("request-id", middleware.GetRequestID(r.Context())),
 	)
+
+	if r.Method != http.MethodPost {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
 
 	discountReq, err := parseDiscountRequest(r.Body)
 	if err != nil {
@@ -290,6 +305,11 @@ func validateDiscount(discount *dto.Discount) map[string]string {
 }
 
 func (h *InventoryHandler) GetProductFromWarehouse(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+
 	if r.URL.Query().Get("product_id") != "" {
 		h.GetOneProductFromWarehouse(w, r)
 	} else {
@@ -408,6 +428,11 @@ func (h *InventoryHandler) CalculateCart(w http.ResponseWriter, r *http.Request)
 		zap.String("request-id", middleware.GetRequestID(r.Context())),
 	)
 
+	if r.Method != http.MethodPost {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+
 	cartReq, err := parseCartRequest(r.Body)
 	if err != nil {
 		log.Error("error while parsing cart", zap.Error(err))
@@ -508,6 +533,11 @@ func (h *InventoryHandler) BuyProducts(w http.ResponseWriter, r *http.Request) {
 		zap.String("request-id", middleware.GetRequestID(r.Context())),
 	)
 
+	if r.Method != http.MethodPost {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+
 	cart, err := parseCartRequest(r.Body)
 	if err != nil {
 		log.Error("error while parsing cart", zap.Error(err))
@@ -521,7 +551,6 @@ func (h *InventoryHandler) BuyProducts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: добавить аналитику
 	response, err := h.service.BuyProducts(r.Context(), cart)
 	if err != nil {
 		if custErr.Any(err, custErr.ErrNotEnoughProductCount, custErr.ErrNotFoundProductAtWarehouse) {
