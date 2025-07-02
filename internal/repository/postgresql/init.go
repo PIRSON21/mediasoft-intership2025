@@ -50,3 +50,7 @@ func parsePostgresOpts(cfg config.DBConfig) (*pgxpool.Config, error) {
 	}
 	return pgxCfg, nil
 }
+
+func (db *Postgres) Close() {
+	db.pool.Close()
+}
