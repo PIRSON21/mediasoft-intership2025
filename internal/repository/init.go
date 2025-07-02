@@ -16,6 +16,7 @@ type Repository interface {
 	InventoryRepository
 
 	AnalyticsRepository
+	Close()
 }
 
 func MustInitRepository(ctx context.Context, dbCfg config.DBConfig) Repository {

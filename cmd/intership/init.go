@@ -4,6 +4,10 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/PIRSON21/mediasoft-intership2025/internal/handler"
 	"github.com/PIRSON21/mediasoft-intership2025/internal/middleware"
@@ -14,7 +18,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func initApp() {
+func startApp() {
 	cfg := config.MustParseConfig()
 	log.Println("config successfully parsed", cfg)
 
@@ -25,7 +29,8 @@ func initApp() {
 
 	// подключение repositories
 	zlog.Info("trying to connect to repositories")
-	repo := repository.MustInitRepository(context.TODO(), cfg.DBConfig)
+	repo := repository.MustInitRepository(context.Background(), cfg.DBConfig)
+	defer repo.Close()
 
 	zlog.Info("repositories set up successfully")
 
@@ -45,9 +50,36 @@ func initApp() {
 	// задание роутингов
 	mux := createRouter(warehouseHandlers, productHandlers, inventoryHandlers, analyticsHandler)
 
+	// создание сервера
+	srv := http.Server{
+		Addr:    cfg.Address,
+		Handler: mux,
+	}
+
+	stopCh := make(chan struct{})
+	go func() {
+		sigint := make(chan os.Signal, 1)
+		signal.Notify(sigint, os.Interrupt, syscall.SIGTERM)
+		<-sigint
+
+		zlog.Info("shutting down server...")
+
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+		defer cancel()
+
+		if err := srv.Shutdown(ctx); err != nil {
+			zlog.Error("error while shutdown server", zap.Error(err))
+		}
+		close(stopCh)
+	}()
+
 	// запуск сервера TODO: убрать отсюда
 	zlog.Info("server ready to start", zap.String("addr", cfg.Address))
-	http.ListenAndServe(cfg.Address, mux)
+	if err := srv.ListenAndServe(); err != http.ErrServerClosed {
+		zlog.Fatal("server error", zap.Error(err))
+	}
+
+	<-stopCh
 }
 
 func createRouter(warehouseHandlers *handler.WarehouseHandler, productHandlers *handler.ProductHandler, inventoryHandlers *handler.InventoryHandler, analyticsHandlers *handler.AnalyticsHandler) *http.ServeMux {
