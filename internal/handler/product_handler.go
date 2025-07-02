@@ -19,10 +19,10 @@ import (
 )
 
 type ProductHandler struct {
-	service service.ProductService
+	service *service.ProductService
 }
 
-func NewProductHandler(s service.ProductService) *ProductHandler {
+func NewProductHandler(s *service.ProductService) *ProductHandler {
 	return &ProductHandler{
 		service: s,
 	}
@@ -163,6 +163,11 @@ func validateCreateProduct(product *dto.ProductRequest) map[string]string {
 
 func (h *ProductHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 	log := logger.GetLogger().With(zap.String("op", "handler.ProductHandler.UpdateProduct"))
+
+	if r.Method != http.MethodPut && r.Method != http.MethodPatch {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
 
 	productID, err := parseProductID(r)
 	if err != nil {

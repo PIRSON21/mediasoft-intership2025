@@ -28,6 +28,11 @@ func (h *AnalyticsHandler) GetWarehouseAnalytics(w http.ResponseWriter, r *http.
 		zap.String("request-id", middleware.GetRequestID(r.Context())),
 	)
 
+	if r.Method != http.MethodGet {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+
 	warehouseID, err := parseWarehouseIDFromURL(r)
 	if err != nil {
 		log.Error("error while parsing warehouseID", zap.Error(err))
@@ -50,6 +55,11 @@ func (h *AnalyticsHandler) GetTopWarehouses(w http.ResponseWriter, r *http.Reque
 		zap.String("op", "handler.AnalyticsHandler.GetTopWarehouses"),
 		zap.String("request-id", middleware.GetRequestID(r.Context())),
 	)
+
+	if r.Method != http.MethodGet {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
 
 	limit, err := parseLimitParams(r)
 	if err != nil {

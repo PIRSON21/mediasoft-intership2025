@@ -13,6 +13,9 @@ func Recoverer(next http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if r := recover(); r != nil {
+				// Если в ResponseWriter уже что-то записано,
+				// будет нежелательное поведение: отпишется то, что было записано + сообщение об ошибке.
+				//
 				// Следует использовать какой-то буферизованный ResponseWriter,
 				// и если случилась паника, писать только это.
 				// Может займусь этим.
