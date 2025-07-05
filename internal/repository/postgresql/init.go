@@ -43,7 +43,7 @@ func NewPostgres(ctx context.Context, dbConfig config.DBConfig) (*Postgres, erro
 }
 
 func parsePostgresOpts(cfg config.DBConfig) (*pgxpool.Config, error) {
-	uri := fmt.Sprintf("postgres://%s:%s@%s:%d/%s?", cfg.DBUser, cfg.DBPassword, cfg.DBHost, cfg.DBPort, cfg.DBName)
+	uri := fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=disable", cfg.DBUser, cfg.DBPassword, cfg.DBHost, cfg.DBPort, cfg.DBName)
 	pgxCfg, err := pgxpool.ParseConfig(uri)
 	if err != nil {
 		return nil, err

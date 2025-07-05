@@ -22,11 +22,18 @@ services:
 
   app:
     build:
-      dockerfile: ./Dockerfile
+      dockerfile: ./deployments/Dockerfile
       context: ../
     ports:
       - "8000:${APP_PORT}"
-    environment: DBNAME:"${DBNAME}" DBUSER:"${DBUSER}" DBPASSWORD:"${DBPASSWORD}" LEVEL:"${LEVEL}" ADDRESS:"${ADDRESS}" ENV:"${ENV}"
+    environment:
+      - DBNAME=${DBNAME}
+      - DBUSER=${DBUSER}
+      - DBPASSWORD=${DBPASSWORD}
+      - DBHOST=${DBHOST}
+      - LEVEL=${LEVEL}
+      - ADDRESS:=${ADDRESS}
+      - ENV=${ENV}
     networks:
       - db_app
     volumes:
@@ -39,18 +46,21 @@ services:
       start_period: 20s
       start_interval: 5s
     depends_on:
-      - postgres
-      - migrate
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
 
   migrate:
     image: migrate/migrate:v4.18.3
     volumes:
-      - ../db/migrations:/migrations/
-    command: "migrate -source /migrations/ -database $DB_URL up"
+      - ../db/migrations:/migrations
+    command: [ "-path", "/migrations", "-database", "${DB_URL}", "up" ]
     networks:
       - db_app
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
 
 networks:
   db_app:

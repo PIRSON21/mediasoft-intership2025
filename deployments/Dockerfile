@@ -7,15 +7,15 @@ RUN go mod download
 COPY . .
 
 ENV CGO_ENABLED=0
-RUN mkdir build && go build -o build/app -ldflags="-s -w" -trimpath ./cmd/intership
+RUN mkdir -p build && go build -o build/app -ldflags="-s -w" -trimpath ./cmd/intership
 
 
 FROM alpine:3.22
 WORKDIR /var/app
 
-RUN apk update --no-cache && apk get curl --no-cache
+RUN apk update && apk add curl
 
-COPY --from=builder ./build/app .
+COPY --from=builder /var/app/build/app .
 
 ENTRYPOINT ["./app"]
 
