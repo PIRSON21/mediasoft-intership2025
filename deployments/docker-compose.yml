@@ -1,0 +1,62 @@
+services:
+  postgres:
+    image: postgres:17.5
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+      POSTGRES_USER: "${POSTGRES_USER}"
+      POSTGRES_DB: "${POSTGRES_DB}"
+    networks:
+      - db_app
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -d $POSTGRES_DB -U $POSTGRES_USER" ]
+      interval: 1m
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+      start_interval: 5s
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+
+  app:
+    build:
+      file: ./Dockerfile
+      context: ../
+    ports:
+      - "8000:${APP_PORT}"
+    environment: DBNAME:"${DBNAME}" DBUSER:"${DBUSER}" DBPASSWORD:"${DBPASSWORD}" LEVEL:"${LEVEL}" ADDRESS:"${ADDRESS}" ENV:"${ENV}"
+    networks:
+      - db_app
+    volumes:
+      - static_files:/var/app/static
+    healthcheck:
+      test: [ "CMD-SHELL", "curl http://localhost:$APP_PORT/api/health_check" ]
+      interval: 1m
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+      start_interval: 5s
+    depends_on:
+      - postgres
+      - migrate
+
+  migrate:
+    image: migrate/migrate:v4.18.3
+    volumes:
+      - ./db/migrations:/migrations/
+    command: "migrate -source /migrations/ -database $DBURL up"
+    networks:
+      - db_app
+    depends_on:
+      - postgres
+
+networks:
+  db_app:
+
+
+volumes:
+  postgres_data:
+
+
