@@ -22,7 +22,7 @@ services:
 
   app:
     build:
-      file: ./Dockerfile
+      dockerfile: ./Dockerfile
       context: ../
     ports:
       - "8000:${APP_PORT}"
@@ -45,8 +45,8 @@ services:
   migrate:
     image: migrate/migrate:v4.18.3
     volumes:
-      - ./db/migrations:/migrations/
-    command: "migrate -source /migrations/ -database $DBURL up"
+      - ../db/migrations:/migrations/
+    command: "migrate -source /migrations/ -database $DB_URL up"
     networks:
       - db_app
     depends_on:
@@ -58,5 +58,6 @@ networks:
 
 volumes:
   postgres_data:
+  static_files:
 
 
