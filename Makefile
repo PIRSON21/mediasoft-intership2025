@@ -27,4 +27,23 @@ down_migration:
 	@migrate -path db/migrations/ -database $(DB_URL) down $(COUNT)
 
 swagger:
-	@swagger generate spec -o ./api/swagger.yaml --scan-models
+	@swagger generate spec -o ./api/swagger.json --scan-models
+
+docker-up:
+	@if docker compose --env-file configs/docker.env --file deployments/docker-compose.yml up --wait -d 2>/dev/null; then \
+		: ; \
+	else \
+		echo "Falling Docker Compose Up"; \
+		exit 1; \
+	fi
+
+
+docker-down:
+	@if docker compose --file deployments/docker-compose.yml down 2>/dev/null; then \
+		: ; \
+	else \
+		echo "Falling Docker Compose Down"; \
+		exit 1; \
+	fi
+
+.PHONY: run build create_migration up_migration down_migration swagger docker-up docker-down
