@@ -15,16 +15,19 @@ import (
 	"go.uber.org/zap"
 )
 
+// ProductService предоставляет методы для работы с продуктами.
 type ProductService struct {
 	host string
 	repo repository.ProductRepository
 }
 
+// NewProductService создает новый экземпляр ProductService.
 func NewProductService(repo repository.ProductRepository, host string) *ProductService {
 	hostURL := createHostURL(host)
 	return &ProductService{repo: repo, host: hostURL}
 }
 
+// createHostURL создает URL для хоста, добавляя протокол, если он отсутствует.
 func createHostURL(host string) string {
 	if strings.Index(host, ":") == 0 {
 		host = "http://localhost" + host
@@ -37,6 +40,7 @@ func createHostURL(host string) string {
 	return host
 }
 
+// GetProducts возвращает список продуктов с их параметрами.
 func (s *ProductService) GetProducts(ctx context.Context) ([]*dto.ProductAtListResponse, error) {
 	log := logger.GetLogger().With(zap.String("op", "service.ProductService.GetProduct"))
 
@@ -51,6 +55,7 @@ func (s *ProductService) GetProducts(ctx context.Context) ([]*dto.ProductAtListR
 	return productsResponse, nil
 }
 
+// createProductsResponse преобразует список продуктов в ответ с параметрами.
 func (s *ProductService) createProductsResponse(products []*domain.Product) []*dto.ProductAtListResponse {
 	var response []*dto.ProductAtListResponse
 	for _, v := range products {
@@ -68,6 +73,7 @@ func (s *ProductService) createProductsResponse(products []*domain.Product) []*d
 	return response
 }
 
+// copyMap создает копию карты, чтобы избежать мутаций оригинала.
 func copyMap(m map[string]any) map[string]any {
 	if m == nil {
 		return nil
@@ -79,6 +85,7 @@ func copyMap(m map[string]any) map[string]any {
 	return newMap
 }
 
+// AddProduct добавляет новый продукт в репозиторий.
 func (s *ProductService) AddProduct(ctx context.Context, request *dto.ProductRequest) error {
 	log := logger.GetLogger().With(zap.String("op", "service.ProductService.AddProduct"))
 
@@ -99,6 +106,7 @@ func (s *ProductService) AddProduct(ctx context.Context, request *dto.ProductReq
 	return nil
 }
 
+// createFile сохраняет файл на диск и возвращает его имя.
 func createFile(photo *dto.Photo) (string, error) {
 	defer photo.File.Close()
 
@@ -118,6 +126,7 @@ func createFile(photo *dto.Photo) (string, error) {
 	return photo.Handler.Filename, nil
 }
 
+// parseProductFromRequest преобразует запрос продукта в домен.
 func parseProductFromRequest(req *dto.ProductRequest, filename string) *domain.Product {
 	return &domain.Product{
 		Name:        req.Name,
@@ -128,6 +137,7 @@ func parseProductFromRequest(req *dto.ProductRequest, filename string) *domain.P
 	}
 }
 
+// UpdateProduct обновляет информацию о продукте в репозитории.
 func (s *ProductService) UpdateProduct(ctx context.Context, productID uuid.UUID, productReq *dto.ProductRequest) error {
 	log := logger.GetLogger().With(zap.String("op", "service.ProductService.UpdateProduct"))
 
@@ -153,6 +163,7 @@ func (s *ProductService) UpdateProduct(ctx context.Context, productID uuid.UUID,
 	return nil
 }
 
+// parseProductFromUpdateRequest преобразует запрос продукта в домен, учитывая обновления.
 func parseProductFromUpdateRequest(req *dto.ProductRequest, filename string) *domain.Product {
 	var product domain.Product
 

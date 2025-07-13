@@ -9,6 +9,7 @@ import (
 	"go.uber.org/zap"
 )
 
+// LoggingMiddleware логирует HTTP-запросы и время их обработки.
 func LoggingMiddleware(next http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log := logger.GetLogger().With(

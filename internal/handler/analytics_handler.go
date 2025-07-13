@@ -12,16 +12,19 @@ import (
 	"go.uber.org/zap"
 )
 
+// AnalyticsHandler обрабатывает запросы, связанные с аналитикой складов.
 type AnalyticsHandler struct {
 	service *service.AnalyticsService
 }
 
+// NewAnalyticsHandler создает новый экземпляр AnalyticsHandler с заданным сервисом аналитики.
 func NewAnalyticsHandler(service *service.AnalyticsService) *AnalyticsHandler {
 	return &AnalyticsHandler{
 		service: service,
 	}
 }
 
+// GetWarehouseAnalytics обрабатывает запросы на получение аналитики по складу.
 func (h *AnalyticsHandler) GetWarehouseAnalytics(w http.ResponseWriter, r *http.Request) {
 	log := logger.GetLogger().With(
 		zap.String("op", "handler.AnalyticsHandler.GetWarehouseAnalytics"),
@@ -50,6 +53,7 @@ func (h *AnalyticsHandler) GetWarehouseAnalytics(w http.ResponseWriter, r *http.
 	render.JSON(w, http.StatusOK, response)
 }
 
+// GetTopWarehouses обрабатывает запросы на получение списка топ-складов.
 func (h *AnalyticsHandler) GetTopWarehouses(w http.ResponseWriter, r *http.Request) {
 	log := logger.GetLogger().With(
 		zap.String("op", "handler.AnalyticsHandler.GetTopWarehouses"),
@@ -78,6 +82,7 @@ func (h *AnalyticsHandler) GetTopWarehouses(w http.ResponseWriter, r *http.Reque
 	render.JSON(w, http.StatusOK, response)
 }
 
+// parseLimitParams извлекает параметр limit из запроса и возвращает его значение.
 func parseLimitParams(r *http.Request) (int, error) {
 	limitStr := r.URL.Query().Get("limit")
 	if limitStr == "" {

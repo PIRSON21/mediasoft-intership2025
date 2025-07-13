@@ -10,16 +10,19 @@ import (
 	"go.uber.org/zap"
 )
 
+// WarehouseService предоставляет методы для работы с складами.
 type WarehouseService struct {
 	repo repository.WarehouseRepository
 }
 
+// NewWarehouseService создает новый экземпляр WarehouseService.
 func NewWarehouseService(repo repository.WarehouseRepository) *WarehouseService {
 	return &WarehouseService{
 		repo: repo,
 	}
 }
 
+// GetWarehouses возвращает список складов.
 func (s *WarehouseService) GetWarehouses(ctx context.Context) ([]*dto.WarehouseAtListResponse, error) {
 	log := logger.GetLogger().With(zap.String("op", "service.WarehouseService.GetWarehouses"))
 
@@ -33,6 +36,7 @@ func (s *WarehouseService) GetWarehouses(ctx context.Context) ([]*dto.WarehouseA
 	return warehousesResp, nil
 }
 
+// createWarehouseListResponse преобразует список складов в ответ с параметрами.
 func createWarehouseListResponse(warehouses []*domain.Warehouse) []*dto.WarehouseAtListResponse {
 	warehousesResp := make([]*dto.WarehouseAtListResponse, 0, len(warehouses))
 
@@ -45,6 +49,7 @@ func createWarehouseListResponse(warehouses []*domain.Warehouse) []*dto.Warehous
 	return warehousesResp
 }
 
+// CreateWarehouse создает новый склад в репозитории.
 func (s *WarehouseService) CreateWarehouse(ctx context.Context, request *dto.WarehouseRequest) error {
 	log := logger.GetLogger().With(zap.String("op", "service.WarehouseService.CreateWarehouse"))
 

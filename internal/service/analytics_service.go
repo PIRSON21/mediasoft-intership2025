@@ -11,16 +11,20 @@ import (
 	"go.uber.org/zap"
 )
 
+// AnalyticsService предоставляет методы для работы с аналитикой.
 type AnalyticsService struct {
 	repo repository.AnalyticsRepository
 }
 
+// NewAnalyticsService создает новый экземпляр AnalyticsService.
+// Принимает в качестве аргумента репозиторий для работы с аналитикой.
 func NewAnalyticsService(repo repository.AnalyticsRepository) *AnalyticsService {
 	return &AnalyticsService{
 		repo: repo,
 	}
 }
 
+// AddProductSell добавляет информацию о продаже продукта в аналитику.
 func (s *AnalyticsService) AddProductSell(invs []*domain.Inventory) {
 	log := logger.GetLogger().With(
 		zap.String("op", "service.AnalyticsService.AddProductSell"),
@@ -33,6 +37,8 @@ func (s *AnalyticsService) AddProductSell(invs []*domain.Inventory) {
 	}
 }
 
+// GetWarehouseAnalytics возвращает аналитику по складу.
+// Принимает идентификатор склада и возвращает информацию о продажах продуктов на этом складе.
 func (s *AnalyticsService) GetWarehouseAnalytics(ctx context.Context, warehouseID string) (*dto.WarehouseAnalyticsResponse, error) {
 	log := logger.GetLogger().With(
 		zap.String("op", "service.GetWarehouseAnalytics"),
@@ -49,6 +55,7 @@ func (s *AnalyticsService) GetWarehouseAnalytics(ctx context.Context, warehouseI
 	return response, nil
 }
 
+// parseWarehouseAnalyticsToResponse преобразует аналитику склада в ответный DTO.
 func parseWarehouseAnalyticsToResponse(warehouseID string, analytics []*domain.Analytics) *dto.WarehouseAnalyticsResponse {
 	analMap := make(map[uuid.UUID]*dto.ProductAnalytic)
 	resp := dto.WarehouseAnalyticsResponse{
@@ -77,6 +84,7 @@ func parseWarehouseAnalyticsToResponse(warehouseID string, analytics []*domain.A
 	return &resp
 }
 
+// GetTopWarehouses возвращает список топ-складов по количеству продаж продуктов.
 func (s *AnalyticsService) GetTopWarehouses(ctx context.Context, limit int) ([]*dto.WarehouseAnalyticsAtListResponse, error) {
 	log := logger.GetLogger().With(
 		zap.String("op", "service.AnalyticsService.GetTopWarehouse"),

@@ -9,6 +9,7 @@ import (
 
 var instance *zap.Logger
 
+// MustCreateLogger инициализирует логгер на основе конфигурации.
 func MustCreateLogger(cfg config.LoggerConfig) {
 	logCfg := createLoggerConfig(&cfg)
 	// TODO: доделать норм инициализацию логера. сделать создание конфига исходя из настроек + создание логгера
@@ -23,6 +24,8 @@ func MustCreateLogger(cfg config.LoggerConfig) {
 	instance.Info("logger initialized")
 }
 
+// GetLogger возвращает инициализированный логгер для использования в приложении.
+// Если логгер не инициализирован, вызывает панику.
 func GetLogger() *zap.Logger {
 	if instance == nil {
 		log.Fatal("logger is not initialized")
@@ -31,12 +34,15 @@ func GetLogger() *zap.Logger {
 	return instance
 }
 
+// createLoggerConfig создает конфигурацию логгера на основе переданных настроек.
 func createLoggerConfig(config *config.LoggerConfig) zap.Config {
 	var (
-		level    = zap.NewAtomicLevel()
-		err      error
+		level = zap.NewAtomicLevel()
+		err   error
+		// TODO: по заданию нужно использовать JSON, нужно поменять на "json"
 		encoding = "console"
-		cfg      zap.Config
+
+		cfg zap.Config
 	)
 
 	if config.Debug {
@@ -57,6 +63,8 @@ func createLoggerConfig(config *config.LoggerConfig) zap.Config {
 	return cfg
 }
 
+// Sync синхронизирует логгер, чтобы все сообщения были записаны.
+// Это нужно для корректного завершения работы приложения.
 func Sync() error {
 	return instance.Sync()
 }

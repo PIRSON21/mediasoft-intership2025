@@ -16,16 +16,19 @@ import (
 	"go.uber.org/zap"
 )
 
+// WarehouseHandler обрабатывает запросы, связанные со складами.
 type WarehouseHandler struct {
 	Service *service.WarehouseService
 }
 
+// NewWarehouseHandler создает новый экземпляр WarehouseHandler с заданным сервисом склада.
 func NewWarehouseHandler(s *service.WarehouseService) *WarehouseHandler {
 	return &WarehouseHandler{
 		Service: s,
 	}
 }
 
+// WarehousesHandler обрабатывает запросы на получение списка складов или создание нового склада.
 func (h *WarehouseHandler) WarehousesHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
@@ -37,6 +40,7 @@ func (h *WarehouseHandler) WarehousesHandler(w http.ResponseWriter, r *http.Requ
 	}
 }
 
+// GetWarehouses обрабатывает запросы на получение списка складов.
 func (h *WarehouseHandler) GetWarehouses(w http.ResponseWriter, r *http.Request) {
 	log := logger.GetLogger().With(
 		zap.String("op", "handlers.WarehouseHandler.GetWarehouses"),
@@ -57,6 +61,7 @@ func (h *WarehouseHandler) GetWarehouses(w http.ResponseWriter, r *http.Request)
 	}
 }
 
+// CreateWarehouse обрабатывает запросы на создание нового склада.
 func (h *WarehouseHandler) CreateWarehouse(w http.ResponseWriter, r *http.Request) {
 	var request dto.WarehouseRequest
 	log := logger.GetLogger().With(
@@ -95,6 +100,7 @@ func (h *WarehouseHandler) CreateWarehouse(w http.ResponseWriter, r *http.Reques
 	w.WriteHeader(http.StatusCreated)
 }
 
+// validateWarehouse проверяет корректность данных склада.
 func validateWarehouse(warehouse *dto.WarehouseRequest) map[string]string {
 	validErr := make(map[string]string)
 	if len(warehouse.Address) == 0 {

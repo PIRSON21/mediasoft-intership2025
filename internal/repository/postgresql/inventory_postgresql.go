@@ -16,6 +16,11 @@ import (
 	"go.uber.org/zap"
 )
 
+// CreateInventory создает новую запись в таблице inventory.
+//
+// Если запись с таким product_id и warehouse_id уже существует, то возвращает ошибку ErrInventoryAlreadyExists.
+//
+// Если warehouse_id или product_id не существует, то возвращает ошибку ErrForeignKey.
 func (db *Postgres) CreateInventory(ctx context.Context, inventory *domain.Inventory) error {
 	log := logger.GetLogger().With(zap.String("op", "repository.Postgres.CreateInventory"))
 
@@ -46,6 +51,11 @@ func (db *Postgres) CreateInventory(ctx context.Context, inventory *domain.Inven
 	return nil
 }
 
+// ChangeProductCount изменяет количество продукта на складе.
+//
+// Если количество меньше нуля, то возвращает ошибку ErrNotEnoughProductCount.
+//
+// Если запись не найдена, то возвращает ErrInventoryNotFound.
 func (db *Postgres) ChangeProductCount(ctx context.Context, inventory *domain.Inventory) error {
 	log := logger.GetLogger().With(zap.String("op", "repository.Postgres.ChangeProductCount"))
 
@@ -71,6 +81,7 @@ func (db *Postgres) ChangeProductCount(ctx context.Context, inventory *domain.In
 	return nil
 }
 
+// AddDiscountToProducts добавляет скидку на продукты в инвентаре.
 func (db *Postgres) AddDiscountToProducts(ctx context.Context, inventory []*domain.Inventory) error {
 	log := logger.GetLogger().With(
 		zap.String("op", "repository.Postgres.AddDiscountToProduct"),
@@ -94,6 +105,9 @@ func (db *Postgres) AddDiscountToProducts(ctx context.Context, inventory []*doma
 	return transaction.Commit(ctx)
 }
 
+// addDiscount добавляет скидку на продукт в инвентаре.
+//
+// Если запись не найдена, то возвращает ErrInventoryNotFound.
 func addDiscount(ctx context.Context, conn pgx.Tx, discount *domain.Inventory) error {
 	stmt := `
 		UPDATE inventory SET product_sale = $1 WHERE warehouse_id = $2 AND product_id = $3
@@ -111,6 +125,9 @@ func addDiscount(ctx context.Context, conn pgx.Tx, discount *domain.Inventory) e
 	return nil
 }
 
+// GetProductFromWarehouse получает информацию о продукте на складе.
+//
+// Если продукт не найден, то возвращает ErrProductNotFound.
 func (db *Postgres) GetProductFromWarehouse(ctx context.Context, inventory *domain.Inventory) error {
 	log := logger.GetLogger().With(
 		zap.String("op", "repository.Postgres.GetProductFromWarehouse"),
@@ -180,6 +197,9 @@ func (db *Postgres) GetProductFromWarehouse(ctx context.Context, inventory *doma
 	return nil
 }
 
+// GetPriceAndDiscount получает цену и скидку для продуктов в инвентаре.
+//
+// Если запись не найдена, то возвращает ErrInventoryNotFound.
 func (db *Postgres) GetPriceAndDiscount(ctx context.Context, invs []*domain.Inventory) error {
 	log := logger.GetLogger().With(
 		zap.String("op", "repository.Postgres.GetPriceAndDiscount"),
@@ -225,6 +245,7 @@ func (db *Postgres) GetPriceAndDiscount(ctx context.Context, invs []*domain.Inve
 	return nil
 }
 
+// scanRows сканирует строки из результата запроса и заполняет информацию о цене и скидке.
 func scanRows(rows pgx.Rows, invMap map[string]*domain.Inventory) error {
 	for rows.Next() {
 		var (
@@ -260,6 +281,7 @@ func scanRows(rows pgx.Rows, invMap map[string]*domain.Inventory) error {
 	return nil
 }
 
+// GetProductsAtWarehouse получает продукты на складе с пагинацией.
 func (db *Postgres) GetProductsAtWarehouse(ctx context.Context, params *dto.Pagination, warehouseID string) ([]*domain.Inventory, error) {
 	log := logger.GetLogger().With(
 		zap.String("op", "repository.Postgres.GetProducts"),
@@ -322,6 +344,9 @@ func (db *Postgres) GetProductsAtWarehouse(ctx context.Context, params *dto.Pagi
 	return products, nil
 }
 
+// BuyProducts вычитает количество продуктов из инвентаря.
+//
+// Если продуктов нет на складе, то возвращает ErrNotEnoughProductCount.
 func (db *Postgres) BuyProducts(ctx context.Context, inventories []*domain.Inventory) error {
 	log := logger.GetLogger().With(
 		zap.String("op", "repository.Postgres.BuyProducts"),
@@ -353,6 +378,9 @@ func (db *Postgres) BuyProducts(ctx context.Context, inventories []*domain.Inven
 	return tx.Commit(ctx)
 }
 
+// validateProductCount проверяет, что количество продуктов на складе достаточно для покупки.
+//
+// Если количество продуктов меньше, чем нужно, то возвращает ErrNotEnoughProductCount.
 func validateProductCount(ctx context.Context, tx pgx.Tx, invs []*domain.Inventory) error {
 	warehouseID := invs[0].Warehouse.ID.String()
 	products := make([]string, 0, len(invs))
@@ -397,6 +425,7 @@ func validateProductCount(ctx context.Context, tx pgx.Tx, invs []*domain.Invento
 	return nil
 }
 
+// processRows обрабатывает строки из результата запроса и проверяет количество продуктов.
 func processRows(rows pgx.Rows, invMap map[string]*domain.Inventory) error {
 	for rows.Next() {
 		var (
@@ -436,6 +465,9 @@ func processRows(rows pgx.Rows, invMap map[string]*domain.Inventory) error {
 	return nil
 }
 
+// updateProductCount обновляет количество продуктов в инвентаре.
+//
+// Если количество продуктов меньше нуля, то возвращает ErrNotEnoughProductCount.
 func updateProductCount(ctx context.Context, tx pgx.Tx, invs []*domain.Inventory) error {
 	warehouseID := invs[0].Warehouse.ID.String()
 	for _, inv := range invs {

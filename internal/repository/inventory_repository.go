@@ -7,6 +7,7 @@ import (
 	"github.com/PIRSON21/mediasoft-intership2025/internal/dto"
 )
 
+// InventoryRepository - интерфейс для работы с инвентарем продуктов.
 type InventoryRepository interface {
 	CreateInventory(context.Context, *domain.Inventory) error
 	ChangeProductCount(context.Context, *domain.Inventory) error

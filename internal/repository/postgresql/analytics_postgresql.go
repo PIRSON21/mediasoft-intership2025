@@ -11,6 +11,7 @@ import (
 	"go.uber.org/zap"
 )
 
+// AddProductSell добавляет информацию о продаже продуктов в аналитику.
 func (db *Postgres) AddProductSell(invs []*domain.Inventory) error {
 	log := logger.GetLogger().With(
 		zap.String("op", "repository.Postgres.AddProductSell"),
@@ -30,6 +31,8 @@ func (db *Postgres) AddProductSell(invs []*domain.Inventory) error {
 	return nil
 }
 
+// getAddProductSellStatement формирует SQL-запрос для добавления информации
+// о продаже продуктов в аналитику.
 func getAddProductSellStatement(invs []*domain.Inventory) (string, []any) {
 	var (
 		cursor = 1
@@ -101,6 +104,7 @@ func (db *Postgres) GetWarehouseAnalytics(ctx context.Context, warehouseID strin
 	return res, nil
 }
 
+// GetTopWarehouses возвращает топ limit складов по сумме продаж продуктов.
 func (db *Postgres) GetTopWarehouses(ctx context.Context, limit int) ([]*dto.WarehouseAnalyticsAtListResponse, error) {
 	log := logger.GetLogger().With(
 		zap.String("op", "repository.Postgres.GetTopWarehouses"),

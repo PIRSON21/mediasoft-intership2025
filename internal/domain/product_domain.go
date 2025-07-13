@@ -2,6 +2,7 @@ package domain
 
 import "github.com/google/uuid"
 
+// Product представляет продукт с его деталями.
 type Product struct {
 	ID          uuid.UUID
 	Weight      float64
