@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"context"
@@ -18,7 +18,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func startApp() {
+func CreateServer(version string) {
 	cfg := config.MustParseConfig()
 	log.Println("config successfully parsed")
 
