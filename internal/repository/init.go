@@ -11,11 +11,16 @@ import (
 )
 
 type Repository interface {
+	CloserRepository
+
 	WarehouseRepository
 	ProductRepository
 	InventoryRepository
 
 	AnalyticsRepository
+}
+
+type CloserRepository interface {
 	Close()
 }
 
