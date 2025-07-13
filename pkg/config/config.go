@@ -6,6 +6,7 @@ import (
 	"github.com/ilyakaznacheev/cleanenv"
 )
 
+// Config - общая конфигурация приложения.
 type Config struct {
 	Environment string `env:"ENV" env-default:"prod"`
 	Address     string `env:"ADDRESS" env-default:":8080"`
@@ -13,6 +14,7 @@ type Config struct {
 	LoggerConfig
 }
 
+// DBConfig - конфигурация базы данных.
 type DBConfig struct {
 	DBName     string `env:"DBNAME" env-required:"true"`
 	DBUser     string `env:"DBUSER" env-required:"true"`
@@ -21,11 +23,15 @@ type DBConfig struct {
 	DBPort     uint16 `env:"DBPORT" env-default:"5432"`
 }
 
+// LoggerConfig - конфигурация логгера.
 type LoggerConfig struct {
 	Debug bool
 	Level string `env:"LEVEL" env-default:"INFO"`
 }
 
+// MustParseConfig читает данные конфига из переменных окружения.
+//
+// При ошибке возвращает панику.
 func MustParseConfig() *Config {
 	var cfg Config
 

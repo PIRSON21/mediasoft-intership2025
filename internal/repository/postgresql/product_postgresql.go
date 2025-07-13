@@ -13,6 +13,7 @@ import (
 	"go.uber.org/zap"
 )
 
+// GetProducts получает список продуктов из базы данных.
 func (db *Postgres) GetProducts(ctx context.Context) ([]*domain.Product, error) {
 	products := make([]*domain.Product, 0)
 	log := logger.GetLogger().With(zap.String("op", "repository.Postgres.GetProduct"))
@@ -45,6 +46,9 @@ func (db *Postgres) GetProducts(ctx context.Context) ([]*domain.Product, error) 
 	return products, nil
 }
 
+// AddProduct добавляет новый продукт в базу данных.
+//
+// Если продукт с таким именем уже существует, то возвращает ErrProductAlreadyExists.
 func (db *Postgres) AddProduct(ctx context.Context, p *domain.Product) error {
 	stmt := `
 	INSERT INTO product(product_name, product_description, product_weight, product_params, product_barcode)
@@ -69,6 +73,9 @@ func (db *Postgres) AddProduct(ctx context.Context, p *domain.Product) error {
 	return nil
 }
 
+// UpdateProduct обновляет информацию о продукте в базе данных.
+//
+// Если продукт не найден, то возвращает ErrProductNotFound.
 func (db *Postgres) UpdateProduct(ctx context.Context, product *domain.Product) error {
 	var (
 		query         []string

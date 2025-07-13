@@ -20,16 +20,19 @@ import (
 	"go.uber.org/zap"
 )
 
+// InventoryHandler обрабатывает запросы, связанные с инвентаризацией товаров на складах.
 type InventoryHandler struct {
 	service *service.InventoryService
 }
 
+// NewInventoryHandler создает новый экземпляр InventoryHandler с заданным сервисом инвентаризации.
 func NewInventoryHandler(service *service.InventoryService) *InventoryHandler {
 	return &InventoryHandler{
 		service: service,
 	}
 }
 
+// CreateInventory обрабатывает запросы на создание инвентаризации товара на складе.
 func (h *InventoryHandler) CreateInventory(w http.ResponseWriter, r *http.Request) {
 	log := logger.GetLogger().With(
 		zap.String("op", "handler.InventoryHandler.CreateInventory"),
@@ -72,6 +75,7 @@ func (h *InventoryHandler) CreateInventory(w http.ResponseWriter, r *http.Reques
 	w.WriteHeader(http.StatusCreated)
 }
 
+// parseInventory извлекает данные инвентаризации из запроса и возвращает их в виде dto.InventoryCreateRequest.
 func parseInventory(r io.Reader) (*dto.InventoryCreateRequest, error) {
 	var invReq dto.InventoryCreateRequest
 
@@ -82,6 +86,7 @@ func parseInventory(r io.Reader) (*dto.InventoryCreateRequest, error) {
 	return &invReq, nil
 }
 
+// validateInventoryCreateRequest проверяет корректность данных инвентаризации.
 func validateInventoryCreateRequest(req *dto.InventoryCreateRequest) map[string]string {
 	validErr := make(map[string]string, 0)
 
@@ -115,6 +120,7 @@ func validateInventoryCreateRequest(req *dto.InventoryCreateRequest) map[string]
 	return nil
 }
 
+// ChangeProductCount обрабатывает запросы на изменение количества товара на складе.
 func (h *InventoryHandler) ChangeProductCount(w http.ResponseWriter, r *http.Request) {
 	log := logger.GetLogger().With(
 		zap.String("op", "handler.InventoryHandler.ChangeProductCount"),
@@ -153,6 +159,7 @@ func (h *InventoryHandler) ChangeProductCount(w http.ResponseWriter, r *http.Req
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// parseChangeProductCountRequest извлекает данные запроса на изменение количества товара и возвращает их в виде dto.ChangeProductCountRequest.
 func parseChangeProductCountRequest(r io.Reader) (*dto.ChangeProductCountRequest, error) {
 	var request dto.ChangeProductCountRequest
 
@@ -163,6 +170,7 @@ func parseChangeProductCountRequest(r io.Reader) (*dto.ChangeProductCountRequest
 	return &request, nil
 }
 
+// validateChangeProductCountRequest проверяет корректность данных запроса на изменение количества товара.
 func validateChangeProductCountRequest(req *dto.ChangeProductCountRequest) map[string]string {
 	validErr := make(map[string]string, 0)
 
@@ -191,6 +199,7 @@ func validateChangeProductCountRequest(req *dto.ChangeProductCountRequest) map[s
 	return nil
 }
 
+// AddDiscountToProduct обрабатывает запросы на добавление скидок к товарам на складе.
 func (h *InventoryHandler) AddDiscountToProduct(w http.ResponseWriter, r *http.Request) {
 	log := logger.GetLogger().With(
 		zap.String("op", "handler.InventoryHandler.AddDiscountToProduct"),
@@ -229,6 +238,7 @@ func (h *InventoryHandler) AddDiscountToProduct(w http.ResponseWriter, r *http.R
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// parseDiscountRequest извлекает данные запроса на скидки и возвращает их в виде dto.DiscountToProductRequest.
 func parseDiscountRequest(r io.Reader) (*dto.DiscountToProductRequest, error) {
 	var discounts dto.DiscountToProductRequest
 
@@ -240,6 +250,7 @@ func parseDiscountRequest(r io.Reader) (*dto.DiscountToProductRequest, error) {
 	return &discounts, nil
 }
 
+// validateDiscountRequest проверяет корректность данных запроса на скидки.
 func validateDiscountRequest(req *dto.DiscountToProductRequest) map[string]any {
 	validErr := make(map[string]any)
 
@@ -266,6 +277,7 @@ func validateDiscountRequest(req *dto.DiscountToProductRequest) map[string]any {
 	return nil
 }
 
+// validateDiscounts проверяет корректность каждого элемента в списке скидок.
 func validateDiscounts(req *dto.DiscountToProductRequest) map[int]any {
 	discountsErr := make(map[int]any)
 	for idx, discount := range req.Discounts {
@@ -282,6 +294,7 @@ func validateDiscounts(req *dto.DiscountToProductRequest) map[int]any {
 	return nil
 }
 
+// validateDiscount проверяет корректность данных скидки.
 func validateDiscount(discount *dto.Discount) map[string]string {
 	discountErr := make(map[string]string)
 
@@ -304,6 +317,7 @@ func validateDiscount(discount *dto.Discount) map[string]string {
 	return nil
 }
 
+// GetProductFromWarehouse обрабатывает запросы на получение информации о товаре на складе.
 func (h *InventoryHandler) GetProductFromWarehouse(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -317,6 +331,7 @@ func (h *InventoryHandler) GetProductFromWarehouse(w http.ResponseWriter, r *htt
 	}
 }
 
+// GetOneProductFromWarehouse обрабатывает запросы на получение информации о конкретном товаре на складе.
 func (h *InventoryHandler) GetOneProductFromWarehouse(w http.ResponseWriter, r *http.Request) {
 	log := logger.GetLogger().With(
 		zap.String("op", "handler.InventoryHandler.GetProductFromWarehouse"),
@@ -349,6 +364,7 @@ func (h *InventoryHandler) GetOneProductFromWarehouse(w http.ResponseWriter, r *
 	render.JSON(w, http.StatusOK, product)
 }
 
+// parseWarehouseIDFromURL извлекает идентификатор склада из URL запроса и возвращает его.
 func parseWarehouseIDFromURL(r *http.Request) (string, error) {
 	splits := strings.Split(r.URL.Path, "/")
 
@@ -361,6 +377,7 @@ func parseWarehouseIDFromURL(r *http.Request) (string, error) {
 	return warehouseID, nil
 }
 
+// parseProductIDFromQuery извлекает идентификатор продукта из параметров запроса и возвращает его.
 func parseProductIDFromQuery(r *http.Request) (string, error) {
 	err := r.ParseForm()
 	if err != nil {
@@ -377,6 +394,7 @@ func parseProductIDFromQuery(r *http.Request) (string, error) {
 	return productID, nil
 }
 
+// GetProductsAtWarehouse обрабатывает запросы на получение списка продуктов на складе.
 func (h *InventoryHandler) GetProductsAtWarehouse(w http.ResponseWriter, r *http.Request) {
 	log := logger.GetLogger().With(
 		zap.String("op", "handler.InventoryHandler.GetProducts"),
@@ -402,6 +420,7 @@ func (h *InventoryHandler) GetProductsAtWarehouse(w http.ResponseWriter, r *http
 	render.JSON(w, http.StatusOK, response)
 }
 
+// parseParams извлекает параметры пагинации из запроса и возвращает их в виде dto.Pagination.
 func parseParams(r *http.Request) *dto.Pagination {
 	page, err := strconv.Atoi(r.URL.Query().Get("page"))
 	if err != nil || page < 1 {
@@ -422,6 +441,7 @@ func parseParams(r *http.Request) *dto.Pagination {
 	}
 }
 
+// CalculateCart обрабатывает запросы на расчет стоимости товаров в корзине.
 func (h *InventoryHandler) CalculateCart(w http.ResponseWriter, r *http.Request) {
 	log := logger.GetLogger().With(
 		zap.String("op", "handler.InventoryHandler.CalculateSum"),
@@ -456,6 +476,7 @@ func (h *InventoryHandler) CalculateCart(w http.ResponseWriter, r *http.Request)
 	render.JSON(w, http.StatusOK, resp)
 }
 
+// parseCartRequest извлекает данные корзины из запроса и возвращает их в виде dto.CartRequest.
 func parseCartRequest(r io.Reader) (*dto.CartRequest, error) {
 	var cart dto.CartRequest
 
@@ -467,6 +488,7 @@ func parseCartRequest(r io.Reader) (*dto.CartRequest, error) {
 	return &cart, nil
 }
 
+// validateCartRequest проверяет корректность данных корзины.
 func validateCartRequest(req *dto.CartRequest) map[string]any {
 	validErr := make(map[string]any)
 	var productsID []string
@@ -506,6 +528,7 @@ func validateCartRequest(req *dto.CartRequest) map[string]any {
 	return nil
 }
 
+// validateProductInCart проверяет корректность данных продукта в корзине.
 func validateProductInCart(product *dto.ProductInCartRequest) map[string]string {
 	productErr := make(map[string]string)
 	if product.ProductID == "" {
@@ -527,6 +550,7 @@ func validateProductInCart(product *dto.ProductInCartRequest) map[string]string 
 	return nil
 }
 
+// BuyProducts обрабатывает запросы на покупку товаров из корзины.
 func (h *InventoryHandler) BuyProducts(w http.ResponseWriter, r *http.Request) {
 	log := logger.GetLogger().With(
 		zap.String("op", "handler.InventoryHandler.BuyProducts"),

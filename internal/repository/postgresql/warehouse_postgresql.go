@@ -13,6 +13,9 @@ import (
 	"go.uber.org/zap"
 )
 
+// GetWarehouses получает список складов из базы данных.
+//
+// Возвращает пустой список, если складов нет.
 func (db *Postgres) GetWarehouses(ctx context.Context) ([]*domain.Warehouse, error) {
 	var warehouses []*domain.Warehouse
 	log := logger.GetLogger().With(zap.String("op", "repository.postgres.GetWarehouses"))
@@ -44,6 +47,9 @@ func (db *Postgres) GetWarehouses(ctx context.Context) ([]*domain.Warehouse, err
 	return warehouses, nil
 }
 
+// CreateWarehouse создает новый склад в базе данных.
+//
+// Если склад с таким адресом уже существует, то возвращает ErrWarehouseAlreadyExists.
 func (db *Postgres) CreateWarehouse(ctx context.Context, warehouse *domain.Warehouse) error {
 	log := logger.GetLogger().With(zap.String("op", "repository.Postgres.CreateWarehouse"))
 

@@ -18,6 +18,7 @@ import (
 	"go.uber.org/zap"
 )
 
+// CreateServer инициализирует все нужное для сервера и запускает его.
 func CreateServer(version string) {
 	cfg := config.MustParseConfig()
 	log.Println("config successfully parsed")

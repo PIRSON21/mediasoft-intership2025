@@ -11,6 +11,7 @@ type RequestIDType string
 
 var requestIDKey RequestIDType = "x-request-id"
 
+// RequestID добавляет уникальный идентификатор запроса в контекст запроса.
 func RequestID(next http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		requestID := r.Header.Get("x-request-id")
@@ -24,10 +25,12 @@ func RequestID(next http.Handler) http.HandlerFunc {
 	}
 }
 
+// createRequestID генерирует новый уникальный идентификатор запроса.
 func createRequestID() string {
 	return uuid.NewString()
 }
 
+// GetRequestID извлекает уникальный идентификатор запроса из контекста.
 func GetRequestID(requestCtx context.Context) string {
 	v := requestCtx.Value(requestIDKey)
 	return v.(string)

@@ -10,10 +10,14 @@ import (
 	"go.uber.org/zap"
 )
 
+// Postgres - реализация репозитория для работы с базой данных PostgreSQL.
+// Использует пул соединений для управления подключениями к базе данных.
+// Реализует интерфейс Repository.
 type Postgres struct {
 	pool *pgxpool.Pool
 }
 
+// NewPostgres создает новое соединение с базой данных PostgreSQL.
 func NewPostgres(ctx context.Context, dbConfig config.DBConfig) (*Postgres, error) {
 	const op = "repository.postgresql.NewPostgres"
 	log := logger.GetLogger()
@@ -42,6 +46,7 @@ func NewPostgres(ctx context.Context, dbConfig config.DBConfig) (*Postgres, erro
 	}, nil
 }
 
+// parsePostgresOpts создает конфигурацию подключения к базе данных PostgreSQL.
 func parsePostgresOpts(cfg config.DBConfig) (*pgxpool.Config, error) {
 	uri := fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=disable", cfg.DBUser, cfg.DBPassword, cfg.DBHost, cfg.DBPort, cfg.DBName)
 	pgxCfg, err := pgxpool.ParseConfig(uri)
@@ -51,6 +56,7 @@ func parsePostgresOpts(cfg config.DBConfig) (*pgxpool.Config, error) {
 	return pgxCfg, nil
 }
 
+// Close закрывает пул соединений с базой данных PostgreSQL.
 func (db *Postgres) Close() {
 	db.pool.Close()
 }

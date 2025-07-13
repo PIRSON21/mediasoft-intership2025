@@ -12,11 +12,13 @@ import (
 	"go.uber.org/zap"
 )
 
+// InventoryService предоставляет методы для работы с инвентаризацией.
 type InventoryService struct {
 	analytics *AnalyticsService
 	repo      repository.InventoryRepository
 }
 
+// NewInventoryService создает новый экземпляр InventoryService.
 func NewInventoryService(repo repository.InventoryRepository, analytics *AnalyticsService) *InventoryService {
 	return &InventoryService{
 		analytics: analytics,
@@ -24,6 +26,7 @@ func NewInventoryService(repo repository.InventoryRepository, analytics *Analyti
 	}
 }
 
+// CreateInventory создает новый инвентарь на складе.
 func (s *InventoryService) CreateInventory(ctx context.Context, request *dto.InventoryCreateRequest) error {
 	log := logger.GetLogger().With(zap.String("op", "service.InventoryService.CreateInventory"))
 
@@ -42,6 +45,7 @@ func (s *InventoryService) CreateInventory(ctx context.Context, request *dto.Inv
 	return nil
 }
 
+// parseInventoryRequestToDomain преобразует запрос на создание инвентаря в доменный объект.
 func parseInventoryRequestToDomain(req *dto.InventoryCreateRequest) (*domain.Inventory, error) {
 	productID, err := uuid.Parse(req.ProductID)
 	if err != nil {
@@ -65,6 +69,7 @@ func parseInventoryRequestToDomain(req *dto.InventoryCreateRequest) (*domain.Inv
 	}, nil
 }
 
+// ChangeProductCount изменяет количество товара на складе.
 func (s *InventoryService) ChangeProductCount(ctx context.Context, request *dto.ChangeProductCountRequest) error {
 	log := logger.GetLogger().With(zap.String("op", "service.InventoryService.ChangeProductCount"))
 
@@ -83,6 +88,7 @@ func (s *InventoryService) ChangeProductCount(ctx context.Context, request *dto.
 	return nil
 }
 
+// parseChangeProductCountRequestToDomain преобразует запрос на изменение количества товара в доменный объект.
 func parseChangeProductCountRequestToDomain(req *dto.ChangeProductCountRequest) (*domain.Inventory, error) {
 	productID, err := uuid.Parse(req.ProductID)
 	if err != nil {
@@ -105,6 +111,7 @@ func parseChangeProductCountRequestToDomain(req *dto.ChangeProductCountRequest) 
 	}, nil
 }
 
+// AddDiscountToProduct добавляет скидки на товары в инвентаре.
 func (s *InventoryService) AddDiscountToProduct(ctx context.Context, request *dto.DiscountToProductRequest) error {
 	log := logger.GetLogger().With(
 		zap.String("op", "service.InventoryService.AddDiscountToProduct"),
@@ -125,6 +132,7 @@ func (s *InventoryService) AddDiscountToProduct(ctx context.Context, request *dt
 	return nil
 }
 
+// parseDiscountToInventory преобразует запрос на скидки в список инвентарей.
 func parseDiscountToInventory(req *dto.DiscountToProductRequest) ([]*domain.Inventory, error) {
 	var inventory []*domain.Inventory
 
@@ -159,6 +167,7 @@ func parseDiscountToInventory(req *dto.DiscountToProductRequest) ([]*domain.Inve
 	return inventory, nil
 }
 
+// GetProductFromWarehouse получает информацию о товаре на складе по его ID.
 func (s *InventoryService) GetProductFromWarehouse(ctx context.Context, warehouseID, productID string) (*dto.ProductFromWarehouseResponse, error) {
 	log := logger.GetLogger().With(
 		zap.String("op", "service.InventoryService.GetProductFromWarehouse"),
@@ -181,6 +190,7 @@ func (s *InventoryService) GetProductFromWarehouse(ctx context.Context, warehous
 	return response, nil
 }
 
+// parseProductRequestToInventory преобразует запрос на получение товара в домен.
 func parseProductRequestToInventory(warehouseIDStr, productIDStr string) (*domain.Inventory, error) {
 	warehouseID, err := uuid.Parse(warehouseIDStr)
 	if err != nil {
@@ -202,6 +212,7 @@ func parseProductRequestToInventory(warehouseIDStr, productIDStr string) (*domai
 	}, nil
 }
 
+// parseProductFromWarehouseToResponse преобразует домен в DTO.
 func parseProductFromWarehouseToResponse(inv *domain.Inventory) *dto.ProductFromWarehouseResponse {
 	response := &dto.ProductFromWarehouseResponse{
 		ProductID:          inv.Product.ID.String(),
@@ -224,11 +235,11 @@ func parseProductFromWarehouseToResponse(inv *domain.Inventory) *dto.ProductFrom
 	return response
 }
 
+// CalculateCart рассчитывает стоимость товаров в корзине с учетом скидок.
 func (s *InventoryService) CalculateCart(ctx context.Context, cartReq *dto.CartRequest) (*dto.CartResponse, error) {
 	log := logger.GetLogger().With(
 		zap.String("op", "service.InventoryService.CalculateCart"),
 	)
-	_ = log
 
 	cart, err := parseCartRequestToDomain(cartReq)
 	if err != nil {
@@ -247,6 +258,7 @@ func (s *InventoryService) CalculateCart(ctx context.Context, cartReq *dto.CartR
 	return resp, nil
 }
 
+// parseCartRequestToDomain преобразует запрос корзины в список доменов.
 func parseCartRequestToDomain(req *dto.CartRequest) ([]*domain.Inventory, error) {
 	var inv []*domain.Inventory
 
@@ -270,6 +282,7 @@ func parseCartRequestToDomain(req *dto.CartRequest) ([]*domain.Inventory, error)
 	return inv, nil
 }
 
+// parseProductFromCartToDomain преобразует корзину запроса в домен.
 func parseProductFromCartToDomain(prod *dto.ProductInCartRequest, warehouse *domain.Warehouse) (*domain.Inventory, error) {
 	productID, err := uuid.Parse(prod.ProductID)
 	if err != nil {
@@ -285,6 +298,7 @@ func parseProductFromCartToDomain(prod *dto.ProductInCartRequest, warehouse *dom
 	}, nil
 }
 
+// parseDomainToCartResponse преобразует список инвентарей в ответ корзины.
 func parseDomainToCartResponse(invs []*domain.Inventory) *dto.CartResponse {
 	var (
 		resp               dto.CartResponse
@@ -319,6 +333,7 @@ func parseDomainToCartResponse(invs []*domain.Inventory) *dto.CartResponse {
 	return &resp
 }
 
+// GetProductsAtWarehouse получает список товаров на складе с пагинацией.
 func (s *InventoryService) GetProductsAtWarehouse(ctx context.Context, params *dto.Pagination, warehouseID string) (*dto.ProductsResponse, error) {
 	log := logger.GetLogger().With(
 		zap.String("op", "service.InventoryService.GetProducts"),
@@ -335,6 +350,7 @@ func (s *InventoryService) GetProductsAtWarehouse(ctx context.Context, params *d
 	return resp, nil
 }
 
+// parseProductsToResponse преобразует список инвентарей в ответ с пагинацией.
 func parseProductsToResponse(prods []*domain.Inventory, params *dto.Pagination) *dto.ProductsResponse {
 	resp := &dto.ProductsResponse{
 		Page:     params.Page,
@@ -360,6 +376,7 @@ func parseProductsToResponse(prods []*domain.Inventory, params *dto.Pagination) 
 	return resp
 }
 
+// BuyProducts обрабатывает покупку товаров из корзины.
 func (s *InventoryService) BuyProducts(ctx context.Context, cart *dto.CartRequest) (*dto.CartResponse, error) {
 	log := logger.GetLogger().With(
 		zap.String("op", "service.InventoryService.BuyProducts"),

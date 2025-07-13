@@ -8,6 +8,7 @@ import (
 	"go.uber.org/zap"
 )
 
+// Recoverer перехватывает панику в обработчике HTTP-запросов.
 func Recoverer(next http.Handler) http.HandlerFunc {
 	log := logger.GetLogger()
 	return func(w http.ResponseWriter, r *http.Request) {
