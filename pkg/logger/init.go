@@ -68,3 +68,7 @@ func createLoggerConfig(config *config.LoggerConfig) zap.Config {
 func Sync() error {
 	return instance.Sync()
 }
+
+func CreateNOPLogger() {
+	instance = zap.NewNop()
+}
