@@ -33,5 +33,8 @@ func createRequestID() string {
 // GetRequestID извлекает уникальный идентификатор запроса из контекста.
 func GetRequestID(requestCtx context.Context) string {
 	v := requestCtx.Value(requestIDKey)
+	if v == nil {
+		return ""
+	}
 	return v.(string)
 }
