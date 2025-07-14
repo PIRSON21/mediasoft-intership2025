@@ -1,0 +1,957 @@
+{
+  "swagger": "2.0",
+  "basePath": "/",
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "schemes": [
+    "http"
+  ],
+  "info": {
+    "description": "Documentation of Inventory API",
+    "title": "Warehouse API",
+    "version": "1.0.0"
+  },
+  "definitions": {
+    "Analytics": {
+      "$ref": "#/definitions/Analytics",
+      "properties": {
+        "Product": {
+          "$ref": "#/definitions/Product"
+        },
+        "ProductCount": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "ProductPrice": {
+          "format": "double",
+          "type": "number"
+        },
+        "Warehouse": {
+          "$ref": "#/definitions/Warehouse"
+        }
+      },
+      "type": "object"
+    },
+    "CartRequest": {
+      "$ref": "#/definitions/CartRequest",
+      "properties": {
+        "products": {
+          "items": {
+            "$ref": "#/definitions/ProductInCartRequest"
+          },
+          "type": "array",
+          "x-go-name": "Products"
+        },
+        "warehouse_id": {
+          "type": "string",
+          "x-go-name": "WarehouseID"
+        }
+      },
+      "type": "object"
+    },
+    "CartResponse": {
+      "$ref": "#/definitions/CartResponse",
+      "properties": {
+        "products": {
+          "items": {
+            "$ref": "#/definitions/ProductInCartResponse"
+          },
+          "type": "array",
+          "x-go-name": "Products"
+        },
+        "total_price": {
+          "format": "double",
+          "type": "number",
+          "x-go-name": "TotalProductPrice"
+        },
+        "total_price_with_discount": {
+          "format": "double",
+          "type": "number",
+          "x-go-name": "TotalProductPriceWithDiscount"
+        }
+      },
+      "type": "object"
+    },
+    "ChangeProductCountRequest": {
+      "$ref": "#/definitions/ChangeProductCountRequest",
+      "properties": {
+        "product_count": {
+          "format": "int64",
+          "type": "integer",
+          "x-go-name": "Count"
+        },
+        "product_id": {
+          "type": "string",
+          "x-go-name": "ProductID"
+        },
+        "warehouse_id": {
+          "type": "string",
+          "x-go-name": "WarehouseID"
+        }
+      },
+      "type": "object"
+    },
+    "Closer": {
+      "description": "The behavior of Close after the first call is undefined.\nSpecific implementations may document their own behavior.",
+      "properties": {
+        "Close": {
+          "type": "string"
+        }
+      },
+      "title": "Closer is the interface that wraps the basic Close method.",
+      "type": "object",
+      "x-go-package": "io"
+    },
+    "Discount": {
+      "$ref": "#/definitions/Discount",
+      "properties": {
+        "discount": {
+          "format": "int64",
+          "type": "integer",
+          "x-go-name": "DiscountValue"
+        },
+        "product_id": {
+          "type": "string",
+          "x-go-name": "ProductID"
+        }
+      },
+      "type": "object"
+    },
+    "DiscountToProductRequest": {
+      "$ref": "#/definitions/DiscountToProductRequest",
+      "properties": {
+        "discounts": {
+          "items": {
+            "$ref": "#/definitions/Discount"
+          },
+          "type": "array",
+          "x-go-name": "Discounts"
+        },
+        "warehouse_id": {
+          "type": "string",
+          "x-go-name": "WarehouseID"
+        }
+      },
+      "type": "object"
+    },
+    "File": {
+      "allOf": [
+        {
+          "type": "object"
+        },
+        {
+          "type": "object"
+        },
+        {
+          "type": "object"
+        },
+        {
+          "properties": {
+            "Close": {
+              "type": "string"
+            }
+          },
+          "type": "object"
+        }
+      ],
+      "description": "Its contents may be either stored in memory or on disk.\nIf stored on disk, the File's underlying concrete type will be an *os.File.",
+      "title": "File is an interface to access the file part of a multipart message.",
+      "type": "object",
+      "x-go-package": "mime/multipart"
+    },
+    "FileHeader": {
+      "properties": {
+        "Filename": {
+          "type": "string"
+        },
+        "Header": {
+          "$ref": "#/definitions/MIMEHeader"
+        },
+        "Size": {
+          "format": "int64",
+          "type": "integer"
+        }
+      },
+      "title": "A FileHeader describes a file part of a multipart request.",
+      "type": "object",
+      "x-go-package": "mime/multipart"
+    },
+    "Inventory": {
+      "$ref": "#/definitions/Inventory",
+      "properties": {
+        "Product": {
+          "$ref": "#/definitions/Product"
+        },
+        "ProductCount": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "ProductPrice": {
+          "format": "double",
+          "type": "number"
+        },
+        "ProductSale": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "Warehouse": {
+          "$ref": "#/definitions/Warehouse"
+        }
+      },
+      "type": "object"
+    },
+    "InventoryCreateRequest": {
+      "$ref": "#/definitions/InventoryCreateRequest",
+      "properties": {
+        "product_count": {
+          "format": "int64",
+          "type": "integer",
+          "x-go-name": "Count"
+        },
+        "product_id": {
+          "type": "string",
+          "x-go-name": "ProductID"
+        },
+        "product_price": {
+          "format": "double",
+          "type": "number",
+          "x-go-name": "Price"
+        },
+        "warehouse_id": {
+          "type": "string",
+          "x-go-name": "WarehouseID"
+        }
+      },
+      "type": "object"
+    },
+    "MIMEHeader": {
+      "additionalProperties": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "description": "A MIMEHeader represents a MIME-style header mapping\nkeys to sets of values.",
+      "type": "object",
+      "x-go-package": "net/textproto"
+    },
+    "Pagination": {
+      "$ref": "#/definitions/Pagination",
+      "properties": {
+        "Limit": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "Offset": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "Page": {
+          "format": "int64",
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    },
+    "Photo": {
+      "properties": {
+        "File": {
+          "$ref": "#/definitions/File"
+        },
+        "Handler": {
+          "$ref": "#/definitions/FileHeader"
+        }
+      },
+      "type": "object",
+      "x-go-package": "github.com/PIRSON21/mediasoft-intership2025/internal/dto"
+    },
+    "Product": {
+      "$ref": "#/definitions/Product",
+      "properties": {
+        "Barcode": {
+          "type": "string"
+        },
+        "Description": {
+          "type": "string"
+        },
+        "ID": {
+          "format": "uuid",
+          "type": "string"
+        },
+        "Name": {
+          "type": "string"
+        },
+        "Params": {
+          "additionalProperties": {},
+          "type": "object"
+        },
+        "Weight": {
+          "format": "double",
+          "type": "number"
+        }
+      },
+      "type": "object"
+    },
+    "ProductAnalytic": {
+      "$ref": "#/definitions/ProductAnalytic",
+      "properties": {
+        "product_id": {
+          "type": "string",
+          "x-go-name": "ProductID"
+        },
+        "product_name": {
+          "type": "string",
+          "x-go-name": "ProductName"
+        },
+        "total_product_count": {
+          "format": "int64",
+          "type": "integer",
+          "x-go-name": "ProductCount"
+        },
+        "total_product_price": {
+          "format": "double",
+          "type": "number",
+          "x-go-name": "ProductPrice"
+        }
+      },
+      "type": "object"
+    },
+    "ProductAtList": {
+      "$ref": "#/definitions/ProductAtList",
+      "properties": {
+        "product_discount_price": {
+          "format": "double",
+          "type": "number",
+          "x-go-name": "ProductPriceWithDiscount"
+        },
+        "product_id": {
+          "type": "string",
+          "x-go-name": "ProductID"
+        },
+        "product_name": {
+          "type": "string",
+          "x-go-name": "ProductName"
+        },
+        "product_price": {
+          "format": "double",
+          "type": "number",
+          "x-go-name": "ProductPrice"
+        }
+      },
+      "type": "object"
+    },
+    "ProductAtListResponse": {
+      "$ref": "#/definitions/ProductAtListResponse",
+      "properties": {
+        "barcode_url": {
+          "type": "string",
+          "x-go-name": "Barcode"
+        },
+        "desc": {
+          "type": "string",
+          "x-go-name": "Description"
+        },
+        "id": {
+          "type": "string",
+          "x-go-name": "ID"
+        },
+        "name": {
+          "type": "string",
+          "x-go-name": "Name"
+        },
+        "params": {
+          "additionalProperties": {},
+          "type": "object",
+          "x-go-name": "Params"
+        },
+        "weight": {
+          "format": "double",
+          "type": "number",
+          "x-go-name": "Weight"
+        }
+      },
+      "type": "object"
+    },
+    "ProductFromWarehouseResponse": {
+      "$ref": "#/definitions/ProductFromWarehouseResponse",
+      "properties": {
+        "product_barcode": {
+          "type": "string",
+          "x-go-name": "ProductBarcode"
+        },
+        "product_count": {
+          "format": "int64",
+          "type": "integer",
+          "x-go-name": "ProductCount"
+        },
+        "product_description": {
+          "type": "string",
+          "x-go-name": "ProductDescription"
+        },
+        "product_id": {
+          "type": "string",
+          "x-go-name": "ProductID"
+        },
+        "product_name": {
+          "type": "string",
+          "x-go-name": "ProductName"
+        },
+        "product_params": {
+          "additionalProperties": {},
+          "type": "object",
+          "x-go-name": "ProductParams"
+        },
+        "product_price": {
+          "format": "double",
+          "type": "number",
+          "x-go-name": "ProductPrice"
+        },
+        "product_sale": {
+          "format": "double",
+          "type": "number",
+          "x-go-name": "ProductPriceWithSale"
+        },
+        "product_weight": {
+          "format": "double",
+          "type": "number",
+          "x-go-name": "ProductWeight"
+        }
+      },
+      "type": "object"
+    },
+    "ProductInCartRequest": {
+      "$ref": "#/definitions/ProductInCartRequest",
+      "properties": {
+        "product_count": {
+          "format": "int64",
+          "type": "integer",
+          "x-go-name": "Count"
+        },
+        "product_id": {
+          "type": "string",
+          "x-go-name": "ProductID"
+        }
+      },
+      "type": "object"
+    },
+    "ProductInCartResponse": {
+      "$ref": "#/definitions/ProductInCartResponse",
+      "properties": {
+        "product_count": {
+          "format": "int64",
+          "type": "integer",
+          "x-go-name": "Count"
+        },
+        "product_id": {
+          "type": "string",
+          "x-go-name": "ProductID"
+        },
+        "product_price": {
+          "format": "double",
+          "type": "number",
+          "x-go-name": "FullPrice"
+        },
+        "product_price_with_discount": {
+          "format": "double",
+          "type": "number",
+          "x-go-name": "PriceWithDiscount"
+        }
+      },
+      "type": "object"
+    },
+    "ProductRequest": {
+      "$ref": "#/definitions/ProductRequest",
+      "properties": {
+        "barcode": {
+          "$ref": "#/definitions/Photo"
+        },
+        "desc": {
+          "type": "string",
+          "x-go-name": "Description"
+        },
+        "name": {
+          "type": "string",
+          "x-go-name": "Name"
+        },
+        "params": {
+          "additionalProperties": {},
+          "type": "object",
+          "x-go-name": "Params"
+        },
+        "weight": {
+          "format": "double",
+          "type": "number",
+          "x-go-name": "Weight"
+        }
+      },
+      "type": "object"
+    },
+    "ProductsResponse": {
+      "$ref": "#/definitions/ProductsResponse",
+      "properties": {
+        "limit": {
+          "format": "int64",
+          "type": "integer",
+          "x-go-name": "Limit"
+        },
+        "page": {
+          "format": "int64",
+          "type": "integer",
+          "x-go-name": "Page"
+        },
+        "products": {
+          "items": {
+            "$ref": "#/definitions/ProductAtList"
+          },
+          "type": "array",
+          "x-go-name": "Products"
+        }
+      },
+      "type": "object"
+    },
+    "Reader": {
+      "description": "Read reads up to len(p) bytes into p. It returns the number of bytes\nread (0 <= n <= len(p)) and any error encountered. Even if Read\nreturns n < len(p), it may use all of p as scratch space during the call.\nIf some data is available but not len(p) bytes, Read conventionally\nreturns what is available instead of waiting for more.\n\nWhen Read encounters an error or end-of-file condition after\nsuccessfully reading n > 0 bytes, it returns the number of\nbytes read. It may return the (non-nil) error from the same call\nor return the error (and n == 0) from a subsequent call.\nAn instance of this general case is that a Reader returning\na non-zero number of bytes at the end of the input stream may\nreturn either err == EOF or err == nil. The next Read should\nreturn 0, EOF.\n\nCallers should always process the n > 0 bytes returned before\nconsidering the error err. Doing so correctly handles I/O errors\nthat happen after reading some bytes and also both of the\nallowed EOF behaviors.\n\nIf len(p) == 0, Read should always return n == 0. It may return a\nnon-nil error if some error condition is known, such as EOF.\n\nImplementations of Read are discouraged from returning a\nzero byte count with a nil error, except when len(p) == 0.\nCallers should treat a return of 0 and nil as indicating that\nnothing happened; in particular it does not indicate EOF.\n\nImplementations must not retain p.",
+      "title": "Reader is the interface that wraps the basic Read method.",
+      "type": "object",
+      "x-go-package": "io"
+    },
+    "ReaderAt": {
+      "description": "ReadAt reads len(p) bytes into p starting at offset off in the\nunderlying input source. It returns the number of bytes\nread (0 <= n <= len(p)) and any error encountered.\n\nWhen ReadAt returns n < len(p), it returns a non-nil error\nexplaining why more bytes were not returned. In this respect,\nReadAt is stricter than Read.\n\nEven if ReadAt returns n < len(p), it may use all of p as scratch\nspace during the call. If some data is available but not len(p) bytes,\nReadAt blocks until either all the data is available or an error occurs.\nIn this respect ReadAt is different from Read.\n\nIf the n = len(p) bytes returned by ReadAt are at the end of the\ninput source, ReadAt may return either err == EOF or err == nil.\n\nIf ReadAt is reading from an input source with a seek offset,\nReadAt should not affect nor be affected by the underlying\nseek offset.\n\nClients of ReadAt can execute parallel ReadAt calls on the\nsame input source.\n\nImplementations must not retain p.",
+      "title": "ReaderAt is the interface that wraps the basic ReadAt method.",
+      "type": "object",
+      "x-go-package": "io"
+    },
+    "Seeker": {
+      "description": "Seek sets the offset for the next Read or Write to offset,\ninterpreted according to whence:\n[SeekStart] means relative to the start of the file,\n[SeekCurrent] means relative to the current offset, and\n[SeekEnd] means relative to the end\n(for example, offset = -2 specifies the penultimate byte of the file).\nSeek returns the new offset relative to the start of the\nfile or an error, if any.\n\nSeeking to an offset before the start of the file is an error.\nSeeking to any positive offset may be allowed, but if the new offset exceeds\nthe size of the underlying object the behavior of subsequent I/O operations\nis implementation-dependent.",
+      "title": "Seeker is the interface that wraps the basic Seek method.",
+      "type": "object",
+      "x-go-package": "io"
+    },
+    "Warehouse": {
+      "$ref": "#/definitions/Warehouse",
+      "properties": {
+        "Address": {
+          "type": "string"
+        },
+        "ID": {
+          "format": "uuid",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "WarehouseAnalyticsAtListResponse": {
+      "$ref": "#/definitions/WarehouseAnalyticsAtListResponse",
+      "properties": {
+        "warehouse_address": {
+          "type": "string",
+          "x-go-name": "WarehouseAddress"
+        },
+        "warehouse_id": {
+          "type": "string",
+          "x-go-name": "WarehouseID"
+        },
+        "warehouse_total_sum": {
+          "format": "double",
+          "type": "number",
+          "x-go-name": "WarehouseTotalSum"
+        }
+      },
+      "type": "object"
+    },
+    "WarehouseAnalyticsResponse": {
+      "$ref": "#/definitions/WarehouseAnalyticsResponse",
+      "properties": {
+        "products": {
+          "items": {
+            "$ref": "#/definitions/ProductAnalytic"
+          },
+          "type": "array",
+          "x-go-name": "Products"
+        },
+        "total_sum": {
+          "format": "double",
+          "type": "number",
+          "x-go-name": "TotalSum"
+        },
+        "warehouse_id": {
+          "type": "string",
+          "x-go-name": "WarehouseID"
+        }
+      },
+      "type": "object"
+    },
+    "WarehouseAtListResponse": {
+      "$ref": "#/definitions/WarehouseAtListResponse",
+      "properties": {
+        "address": {
+          "type": "string",
+          "x-go-name": "Address"
+        },
+        "id": {
+          "type": "string",
+          "x-go-name": "ID"
+        }
+      },
+      "type": "object"
+    },
+    "WarehouseRequest": {
+      "$ref": "#/definitions/WarehouseRequest",
+      "properties": {
+        "address": {
+          "type": "string",
+          "x-go-name": "Address"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "paths": {
+    "/analytics/{id}": {
+      "get": {
+        "description": "Get analytics for warehouse",
+        "operationId": "getWarehouseAnalytics",
+        "responses": {
+          "200": {
+            "$ref": "#/responses/WarehouseAnalyticsResponse"
+          },
+          "500": {
+            "$ref": "#/responses/ErrorResponse"
+          }
+        },
+        "tags": [
+          "analytics"
+        ]
+      }
+    },
+    "/analytics/top_warehouses": {
+      "get": {
+        "description": "Get top warehouses",
+        "operationId": "getTopWarehouses",
+        "responses": {
+          "200": {
+            "$ref": "#/responses/WarehouseAnalyticsAtListResponse"
+          },
+          "500": {
+            "$ref": "#/responses/ErrorResponse"
+          }
+        },
+        "tags": [
+          "analytics"
+        ]
+      }
+    },
+    "/api/health": {
+      "get": {
+        "description": "Health check endpoint",
+        "operationId": "healthCheck",
+        "responses": {
+          "200": {
+            "$ref": "#/responses/none"
+          }
+        },
+        "tags": [
+          "health"
+        ]
+      }
+    },
+    "/inventory": {
+      "post": {
+        "description": "Create inventory record",
+        "operationId": "createInventory",
+        "responses": {
+          "201": {
+            "$ref": "#/responses/none"
+          },
+          "400": {
+            "$ref": "#/responses/ErrorResponse"
+          },
+          "409": {
+            "$ref": "#/responses/ErrorResponse"
+          },
+          "500": {
+            "$ref": "#/responses/ErrorResponse"
+          }
+        },
+        "tags": [
+          "inventory"
+        ]
+      }
+    },
+    "/inventory/add_discount": {
+      "post": {
+        "description": "Add discount to products",
+        "operationId": "addDiscount",
+        "responses": {
+          "204": {
+            "$ref": "#/responses/none"
+          },
+          "400": {
+            "$ref": "#/responses/ErrorResponse"
+          },
+          "404": {
+            "$ref": "#/responses/ErrorResponse"
+          },
+          "500": {
+            "$ref": "#/responses/ErrorResponse"
+          }
+        },
+        "tags": [
+          "inventory"
+        ]
+      }
+    },
+    "/inventory/buy": {
+      "post": {
+        "description": "Buy products",
+        "operationId": "buyProducts",
+        "responses": {
+          "200": {
+            "$ref": "#/responses/CartResponse"
+          },
+          "400": {
+            "$ref": "#/responses/ErrorResponse"
+          },
+          "500": {
+            "$ref": "#/responses/ErrorResponse"
+          }
+        },
+        "tags": [
+          "inventory"
+        ]
+      }
+    },
+    "/inventory/change_count": {
+      "post": {
+        "description": "Change product count in warehouse",
+        "operationId": "changeProductCount",
+        "responses": {
+          "204": {
+            "$ref": "#/responses/none"
+          },
+          "400": {
+            "$ref": "#/responses/ErrorResponse"
+          },
+          "404": {
+            "$ref": "#/responses/ErrorResponse"
+          },
+          "500": {
+            "$ref": "#/responses/ErrorResponse"
+          }
+        },
+        "tags": [
+          "inventory"
+        ]
+      }
+    },
+    "/inventory/check_cart": {
+      "post": {
+        "description": "Calculate cart",
+        "operationId": "checkCart",
+        "responses": {
+          "200": {
+            "$ref": "#/responses/CartResponse"
+          },
+          "400": {
+            "$ref": "#/responses/ErrorResponse"
+          },
+          "500": {
+            "$ref": "#/responses/ErrorResponse"
+          }
+        },
+        "tags": [
+          "inventory"
+        ]
+      }
+    },
+    "/product/{id}": {
+      "patch": {
+        "description": "Partially update product information",
+        "operationId": "patchProduct",
+        "responses": {
+          "204": {
+            "$ref": "#/responses/none"
+          },
+          "400": {
+            "$ref": "#/responses/ErrorResponse"
+          },
+          "500": {
+            "$ref": "#/responses/ErrorResponse"
+          }
+        },
+        "tags": [
+          "products"
+        ]
+      },
+      "put": {
+        "description": "Update product information",
+        "operationId": "updateProduct",
+        "responses": {
+          "204": {
+            "$ref": "#/responses/none"
+          },
+          "400": {
+            "$ref": "#/responses/ErrorResponse"
+          },
+          "500": {
+            "$ref": "#/responses/ErrorResponse"
+          }
+        },
+        "tags": [
+          "products"
+        ]
+      }
+    },
+    "/products": {
+      "get": {
+        "description": "Returns list of products",
+        "operationId": "getProducts",
+        "responses": {
+          "200": {
+            "$ref": "#/responses/ProductResponse"
+          },
+          "500": {
+            "$ref": "#/responses/ErrorResponse"
+          }
+        },
+        "tags": [
+          "products"
+        ]
+      },
+      "post": {
+        "description": "Adds a product",
+        "operationId": "addProduct",
+        "responses": {
+          "201": {
+            "$ref": "#/responses/none"
+          },
+          "409": {
+            "$ref": "#/responses/ErrorResponse"
+          },
+          "422": {
+            "$ref": "#/responses/ErrorResponse"
+          }
+        },
+        "tags": [
+          "products"
+        ]
+      }
+    },
+    "/warehouse/{id}": {
+      "get": {
+        "description": "Returns products at warehouse or one product if query provided",
+        "operationId": "getWarehouseProducts",
+        "responses": {
+          "200": {
+            "description": "ProductsResponse",
+            "schema": {
+              "$ref": "#/definitions/ProductsResponse"
+            }
+          },
+          "404": {
+            "$ref": "#/responses/ErrorResponse"
+          },
+          "500": {
+            "$ref": "#/responses/ErrorResponse"
+          }
+        },
+        "tags": [
+          "inventory"
+        ]
+      }
+    },
+    "/warehouses": {
+      "get": {
+        "description": "Returns list of warehouses",
+        "operationId": "listWarehouses",
+        "responses": {
+          "200": {
+            "$ref": "#/responses/WarehousesResponse"
+          },
+          "500": {
+            "$ref": "#/responses/ErrorResponse"
+          }
+        },
+        "tags": [
+          "warehouses"
+        ]
+      },
+      "post": {
+        "description": "Creates a warehouse",
+        "operationId": "createWarehouse",
+        "responses": {
+          "201": {
+            "$ref": "#/responses/none"
+          },
+          "409": {
+            "$ref": "#/responses/ErrorResponse"
+          },
+          "422": {
+            "$ref": "#/responses/ErrorResponse"
+          }
+        },
+        "tags": [
+          "warehouses"
+        ]
+      }
+    }
+  },
+  "responses": {
+    "CartResponse": {
+      "description": "CartResponse swagger response",
+      "schema": {
+        "$ref": "#/definitions/CartResponse"
+      }
+    },
+    "ErrorResponse": {
+      "description": "ErrorResponse represents an error message.",
+      "schema": {
+        "properties": {
+          "error": {
+            "description": "Error description",
+            "type": "string",
+            "x-go-name": "Error"
+          }
+        },
+        "type": "object"
+      }
+    },
+    "ProductResponse": {
+      "description": "ProductResponse represents a response containing product details.",
+      "schema": {
+        "items": {
+          "$ref": "#/definitions/ProductAtListResponse"
+        },
+        "type": "array"
+      }
+    },
+    "WarehouseAnalyticsAtListResponse": {
+      "description": "WarehouseAnalyticsAtListResponse swagger response",
+      "schema": {
+        "items": {
+          "$ref": "#/definitions/WarehouseAnalyticsAtListResponse"
+        },
+        "type": "array"
+      }
+    },
+    "WarehouseAnalyticsResponse": {
+      "description": "WarehouseAnalyticsResponse swagger response",
+      "schema": {
+        "$ref": "#/definitions/WarehouseAnalyticsResponse"
+      }
+    },
+    "WarehousesResponse": {
+      "description": "WarehousesResponse represents list of warehouses.",
+      "schema": {
+        "items": {
+          "$ref": "#/definitions/WarehouseAtListResponse"
+        },
+        "type": "array"
+      }
+    }
+  }
+}
