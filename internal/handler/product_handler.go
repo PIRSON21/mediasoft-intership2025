@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -11,18 +12,26 @@ import (
 	"github.com/PIRSON21/mediasoft-intership2025/internal/dto"
 	custErr "github.com/PIRSON21/mediasoft-intership2025/internal/errors"
 	"github.com/PIRSON21/mediasoft-intership2025/internal/middleware"
-	"github.com/PIRSON21/mediasoft-intership2025/internal/service"
 	"github.com/PIRSON21/mediasoft-intership2025/pkg/logger"
 	"github.com/PIRSON21/mediasoft-intership2025/pkg/render"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
 
-type ProductHandler struct {
-	service *service.ProductService
+// ProductService определяет методы для работы с продуктами.
+//
+//go:generate mockery init github.com/PIRSON21/mediasoft-intership2025/internal/handler
+type ProductService interface {
+	GetProducts(ctx context.Context) ([]*dto.ProductAtListResponse, error)
+	AddProduct(ctx context.Context, request *dto.ProductRequest) error
+	UpdateProduct(ctx context.Context, productID uuid.UUID, request *dto.ProductRequest) error
 }
 
-func NewProductHandler(s *service.ProductService) *ProductHandler {
+type ProductHandler struct {
+	service ProductService
+}
+
+func NewProductHandler(s ProductService) *ProductHandler {
 	return &ProductHandler{
 		service: s,
 	}

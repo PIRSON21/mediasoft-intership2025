@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -13,20 +14,32 @@ import (
 	"github.com/PIRSON21/mediasoft-intership2025/internal/dto"
 	custErr "github.com/PIRSON21/mediasoft-intership2025/internal/errors"
 	"github.com/PIRSON21/mediasoft-intership2025/internal/middleware"
-	"github.com/PIRSON21/mediasoft-intership2025/internal/service"
 	"github.com/PIRSON21/mediasoft-intership2025/pkg/logger"
 	"github.com/PIRSON21/mediasoft-intership2025/pkg/render"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
 
+// InventoryService определяет методы для работы с инвентаризацией товаров на складах.
+//
+//go:generate mockery init github.com/PIRSON21/mediasoft-intership2025/internal/handler
+type InventoryService interface {
+	CreateInventory(ctx context.Context, request *dto.InventoryCreateRequest) error
+	ChangeProductCount(ctx context.Context, request *dto.ChangeProductCountRequest) error
+	AddDiscountToProduct(ctx context.Context, request *dto.DiscountToProductRequest) error
+	GetProductFromWarehouse(ctx context.Context, warehouseID, productID string) (*dto.ProductFromWarehouseResponse, error)
+	GetProductsAtWarehouse(ctx context.Context, params *dto.Pagination, warehouseID string) (*dto.ProductsResponse, error)
+	CalculateCart(ctx context.Context, request *dto.CartRequest) (*dto.CartResponse, error)
+	BuyProducts(ctx context.Context, request *dto.CartRequest) (*dto.CartResponse, error)
+}
+
 // InventoryHandler обрабатывает запросы, связанные с инвентаризацией товаров на складах.
 type InventoryHandler struct {
-	service *service.InventoryService
+	service InventoryService
 }
 
 // NewInventoryHandler создает новый экземпляр InventoryHandler с заданным сервисом инвентаризации.
-func NewInventoryHandler(service *service.InventoryService) *InventoryHandler {
+func NewInventoryHandler(service InventoryService) *InventoryHandler {
 	return &InventoryHandler{
 		service: service,
 	}

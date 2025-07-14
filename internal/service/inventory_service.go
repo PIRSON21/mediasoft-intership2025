@@ -6,6 +6,7 @@ import (
 
 	"github.com/PIRSON21/mediasoft-intership2025/internal/domain"
 	"github.com/PIRSON21/mediasoft-intership2025/internal/dto"
+	"github.com/PIRSON21/mediasoft-intership2025/internal/handler"
 	"github.com/PIRSON21/mediasoft-intership2025/internal/repository"
 	"github.com/PIRSON21/mediasoft-intership2025/pkg/logger"
 	"github.com/google/uuid"
@@ -19,7 +20,7 @@ type InventoryService struct {
 }
 
 // NewInventoryService создает новый экземпляр InventoryService.
-func NewInventoryService(repo repository.InventoryRepository, analytics *AnalyticsService) *InventoryService {
+func NewInventoryService(repo repository.InventoryRepository, analytics *AnalyticsService) handler.InventoryService {
 	return &InventoryService{
 		analytics: analytics,
 		repo:      repo,
