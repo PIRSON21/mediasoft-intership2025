@@ -9,6 +9,7 @@ import (
 
 	"github.com/PIRSON21/mediasoft-intership2025/internal/domain"
 	"github.com/PIRSON21/mediasoft-intership2025/internal/dto"
+	"github.com/PIRSON21/mediasoft-intership2025/internal/handler"
 	"github.com/PIRSON21/mediasoft-intership2025/internal/repository"
 	"github.com/PIRSON21/mediasoft-intership2025/pkg/logger"
 	"github.com/google/uuid"
@@ -22,7 +23,7 @@ type ProductService struct {
 }
 
 // NewProductService создает новый экземпляр ProductService.
-func NewProductService(repo repository.ProductRepository, host string) *ProductService {
+func NewProductService(repo repository.ProductRepository, host string) handler.ProductService {
 	hostURL := createHostURL(host)
 	return &ProductService{repo: repo, host: hostURL}
 }

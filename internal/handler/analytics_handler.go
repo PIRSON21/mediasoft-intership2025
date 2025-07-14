@@ -1,24 +1,33 @@
 package handler
 
 import (
+	"context"
 	"net/http"
 	"strconv"
 
+	"github.com/PIRSON21/mediasoft-intership2025/internal/dto"
 	custErr "github.com/PIRSON21/mediasoft-intership2025/internal/errors"
 	"github.com/PIRSON21/mediasoft-intership2025/internal/middleware"
-	"github.com/PIRSON21/mediasoft-intership2025/internal/service"
 	"github.com/PIRSON21/mediasoft-intership2025/pkg/logger"
 	"github.com/PIRSON21/mediasoft-intership2025/pkg/render"
 	"go.uber.org/zap"
 )
 
+// AnalyticsService определяет методы для работы с аналитикой складов.
+//
+//go:generate mockery init github.com/PIRSON21/mediasoft-intership2025/internal/handler
+type AnalyticsService interface {
+	GetWarehouseAnalytics(ctx context.Context, warehouseID string) (*dto.WarehouseAnalyticsResponse, error)
+	GetTopWarehouses(ctx context.Context, limit int) ([]*dto.WarehouseAnalyticsAtListResponse, error)
+}
+
 // AnalyticsHandler обрабатывает запросы, связанные с аналитикой складов.
 type AnalyticsHandler struct {
-	service *service.AnalyticsService
+	service AnalyticsService
 }
 
 // NewAnalyticsHandler создает новый экземпляр AnalyticsHandler с заданным сервисом аналитики.
-func NewAnalyticsHandler(service *service.AnalyticsService) *AnalyticsHandler {
+func NewAnalyticsHandler(service AnalyticsService) *AnalyticsHandler {
 	return &AnalyticsHandler{
 		service: service,
 	}

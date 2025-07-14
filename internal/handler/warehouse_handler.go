@@ -10,19 +10,26 @@ import (
 	"github.com/PIRSON21/mediasoft-intership2025/internal/dto"
 	custErr "github.com/PIRSON21/mediasoft-intership2025/internal/errors"
 	"github.com/PIRSON21/mediasoft-intership2025/internal/middleware"
-	"github.com/PIRSON21/mediasoft-intership2025/internal/service"
 	"github.com/PIRSON21/mediasoft-intership2025/pkg/logger"
 	"github.com/PIRSON21/mediasoft-intership2025/pkg/render"
 	"go.uber.org/zap"
 )
 
+// WarehouseService определяет методы для работы со складами.
+//
+//go:generate mockery init github.com/PIRSON21/mediasoft-intership2025/internal/handler
+type WarehouseService interface {
+	GetWarehouses(ctx context.Context) ([]*dto.WarehouseAtListResponse, error)
+	CreateWarehouse(ctx context.Context, request *dto.WarehouseRequest) error
+}
+
 // WarehouseHandler обрабатывает запросы, связанные со складами.
 type WarehouseHandler struct {
-	Service *service.WarehouseService
+	Service WarehouseService
 }
 
 // NewWarehouseHandler создает новый экземпляр WarehouseHandler с заданным сервисом склада.
-func NewWarehouseHandler(s *service.WarehouseService) *WarehouseHandler {
+func NewWarehouseHandler(s WarehouseService) *WarehouseHandler {
 	return &WarehouseHandler{
 		Service: s,
 	}
