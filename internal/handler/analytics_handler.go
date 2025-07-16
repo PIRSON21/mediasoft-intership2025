@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/PIRSON21/mediasoft-intership2025/internal/domain"
 	"github.com/PIRSON21/mediasoft-intership2025/internal/dto"
 	custErr "github.com/PIRSON21/mediasoft-intership2025/internal/errors"
 	"github.com/PIRSON21/mediasoft-intership2025/internal/middleware"
@@ -17,6 +18,7 @@ import (
 //
 //go:generate mockery init github.com/PIRSON21/mediasoft-intership2025/internal/handler
 type AnalyticsService interface {
+	AddProductSell(invs []*domain.Inventory)
 	GetWarehouseAnalytics(ctx context.Context, warehouseID string) (*dto.WarehouseAnalyticsResponse, error)
 	GetTopWarehouses(ctx context.Context, limit int) ([]*dto.WarehouseAnalyticsAtListResponse, error)
 }
