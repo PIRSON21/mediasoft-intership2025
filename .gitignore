@@ -1,4 +1,3 @@
-configs/make.env
 build/
-.env
+*.env
 !.env.template
