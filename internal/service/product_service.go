@@ -22,8 +22,7 @@ type ProductService struct {
 
 // NewProductService создает новый экземпляр ProductService.
 func NewProductService(repo repository.ProductRepository, host string) *ProductService {
-	hostURL := createHostURL(host)
-	return &ProductService{repo: repo, host: hostURL}
+	return &ProductService{repo: repo, host: host}
 }
 
 // GetProducts возвращает список продуктов с их параметрами.
