@@ -199,6 +199,10 @@ func (h *ProductHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 
 	err = h.service.UpdateProduct(r.Context(), productID, product)
 	if err != nil {
+		if custErr.Any(err, custErr.ErrProductAlreadyExists, custErr.ErrProductNotFound) {
+			custErr.UnnamedError(w, http.StatusConflict, err.Error())
+			return
+		}
 		log.Error("error while updating product", zap.String("err", err.Error()))
 		custErr.UnnamedError(w, http.StatusInternalServerError, "error while updating product")
 		return

@@ -118,6 +118,12 @@ func (db *Postgres) UpdateProduct(ctx context.Context, product *domain.Product) 
 
 	tag, err := db.pool.Exec(ctx, stmt, args...)
 	if err != nil {
+		var pgError *pgconn.PgError
+		if errors.As(err, &pgError) {
+			if pgError.Code == "23505" {
+				return custErr.ErrProductAlreadyExists
+			}
+		}
 		return err
 	}
 
