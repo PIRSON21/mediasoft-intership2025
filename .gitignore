@@ -1,2 +1,4 @@
 configs/make.env
 build/
+.env
+!.env.template
