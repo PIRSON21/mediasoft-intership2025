@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -34,14 +35,15 @@ func CreateServer(version string) {
 	repo := repository.MustInitRepository(context.Background(), cfg.DBConfig)
 	defer repo.Close()
 
+	hostURL := createHostURL(cfg.Address)
 	zlog.Debug("repositories set up successfully")
 
 	// инициализация services
 	zlog.Debug("setting up the services")
 	warehouseService := service.NewWarehouseService(repo)
-	productService := service.NewProductService(repo, cfg.Address)
+	productService := service.NewProductService(repo, hostURL)
 	analyticsService := service.NewAnalyticsService(repo)
-	inventoryService := service.NewInventoryService(repo, analyticsService)
+	inventoryService := service.NewInventoryService(repo, analyticsService, hostURL)
 
 	// инициализация handlers
 	zlog.Debug("setting up the handlers")
@@ -193,4 +195,17 @@ func chainMiddleware(h http.Handler, mws ...func(http.Handler) http.HandlerFunc)
 		h = mws[i](h)
 	}
 	return h
+}
+
+// createHostURL создает URL для хоста, добавляя протокол, если он отсутствует.
+func createHostURL(host string) string {
+	if strings.Index(host, ":") == 0 {
+		host = "http://localhost" + host
+	}
+
+	if !(strings.HasPrefix(host, "http://") || strings.HasPrefix(host, "https://")) {
+		host = "http://" + host
+	}
+
+	return host
 }

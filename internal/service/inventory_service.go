@@ -17,13 +17,15 @@ import (
 type InventoryService struct {
 	analytics handler.AnalyticsService
 	repo      repository.InventoryRepository
+	host      string
 }
 
 // NewInventoryService создает новый экземпляр InventoryService.
-func NewInventoryService(repo repository.InventoryRepository, analytics handler.AnalyticsService) *InventoryService {
+func NewInventoryService(repo repository.InventoryRepository, analytics handler.AnalyticsService, host string) *InventoryService {
 	return &InventoryService{
 		analytics: analytics,
 		repo:      repo,
+		host:      host,
 	}
 }
 
