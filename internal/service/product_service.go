@@ -5,7 +5,6 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/PIRSON21/mediasoft-intership2025/internal/domain"
 	"github.com/PIRSON21/mediasoft-intership2025/internal/dto"
@@ -25,19 +24,6 @@ type ProductService struct {
 func NewProductService(repo repository.ProductRepository, host string) *ProductService {
 	hostURL := createHostURL(host)
 	return &ProductService{repo: repo, host: hostURL}
-}
-
-// createHostURL создает URL для хоста, добавляя протокол, если он отсутствует.
-func createHostURL(host string) string {
-	if strings.Index(host, ":") == 0 {
-		host = "http://localhost" + host
-	}
-
-	if !(strings.HasPrefix(host, "http://") || strings.HasPrefix(host, "https://")) {
-		host = "http://" + host
-	}
-
-	return host
 }
 
 // GetProducts возвращает список продуктов с их параметрами.
