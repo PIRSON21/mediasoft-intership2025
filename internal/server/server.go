@@ -87,6 +87,7 @@ func CreateServer(version string) {
 	<-stopCh
 }
 
+// createRouter создает маршрутизатор с заданными обработчиками и middleware.
 func createRouter(warehouseHandlers *handler.WarehouseHandler, productHandlers *handler.ProductHandler, inventoryHandlers *handler.InventoryHandler, analyticsHandlers *handler.AnalyticsHandler) *http.ServeMux {
 	mux := http.NewServeMux()
 
@@ -100,7 +101,7 @@ func createRouter(warehouseHandlers *handler.WarehouseHandler, productHandlers *
 	})
 
 	// warehouses
-	mux.Handle("/warehouses", chainMiddleware(
+	mux.Handle("/api/warehouses", chainMiddleware(
 		http.HandlerFunc(warehouseHandlers.WarehousesHandler),
 		middleware.Recoverer,
 		middleware.RequestID,
@@ -108,14 +109,14 @@ func createRouter(warehouseHandlers *handler.WarehouseHandler, productHandlers *
 	))
 
 	// products
-	mux.Handle("/products", chainMiddleware(
+	mux.Handle("/api/products", chainMiddleware(
 		http.HandlerFunc(productHandlers.ProductsHandler),
 		middleware.Recoverer,
 		middleware.RequestID,
 		middleware.LoggingMiddleware,
 	))
 
-	mux.Handle("/product/", chainMiddleware(
+	mux.Handle("/api/product/", chainMiddleware(
 		http.HandlerFunc(productHandlers.UpdateProduct),
 		middleware.Recoverer,
 		middleware.RequestID,
@@ -123,42 +124,42 @@ func createRouter(warehouseHandlers *handler.WarehouseHandler, productHandlers *
 	))
 
 	// inventory
-	mux.Handle("/inventory/change_count", chainMiddleware(
+	mux.Handle("/api/inventory/change_count", chainMiddleware(
 		http.HandlerFunc(inventoryHandlers.ChangeProductCount),
 		middleware.Recoverer,
 		middleware.RequestID,
 		middleware.LoggingMiddleware,
 	))
 
-	mux.Handle("/inventory/add_discount", chainMiddleware(
+	mux.Handle("/api/inventory/add_discount", chainMiddleware(
 		http.HandlerFunc(inventoryHandlers.AddDiscountToProduct),
 		middleware.Recoverer,
 		middleware.RequestID,
 		middleware.LoggingMiddleware,
 	))
 
-	mux.Handle("/inventory/check_cart", chainMiddleware(
+	mux.Handle("/api/inventory/check_cart", chainMiddleware(
 		http.HandlerFunc(inventoryHandlers.CalculateCart),
 		middleware.Recoverer,
 		middleware.RequestID,
 		middleware.LoggingMiddleware,
 	))
 
-	mux.Handle("/inventory/buy", chainMiddleware(
+	mux.Handle("/api/inventory/buy", chainMiddleware(
 		http.HandlerFunc(inventoryHandlers.BuyProducts),
 		middleware.Recoverer,
 		middleware.RequestID,
 		middleware.LoggingMiddleware,
 	))
 
-	mux.Handle("/warehouse/", chainMiddleware(
+	mux.Handle("/api/warehouse/", chainMiddleware(
 		http.HandlerFunc(inventoryHandlers.GetProductFromWarehouse),
 		middleware.Recoverer,
 		middleware.RequestID,
 		middleware.LoggingMiddleware,
 	))
 
-	mux.Handle("/inventory", chainMiddleware(
+	mux.Handle("/api/inventory", chainMiddleware(
 		http.HandlerFunc(inventoryHandlers.CreateInventory),
 		middleware.Recoverer,
 		middleware.RequestID,
@@ -166,14 +167,14 @@ func createRouter(warehouseHandlers *handler.WarehouseHandler, productHandlers *
 	))
 
 	// analytics
-	mux.Handle("/analytics/", chainMiddleware(
+	mux.Handle("/api/analytics/", chainMiddleware(
 		http.HandlerFunc(analyticsHandlers.GetWarehouseAnalytics),
 		middleware.Recoverer,
 		middleware.RequestID,
 		middleware.LoggingMiddleware,
 	))
 
-	mux.Handle("/analytics/top_warehouses", chainMiddleware(
+	mux.Handle("/api/analytics/top_warehouses", chainMiddleware(
 		http.HandlerFunc(analyticsHandlers.GetTopWarehouses),
 		middleware.Recoverer,
 		middleware.RequestID,
@@ -186,6 +187,7 @@ func createRouter(warehouseHandlers *handler.WarehouseHandler, productHandlers *
 	return mux
 }
 
+// chainMiddleware объединяет несколько middleware в одну цепочку.
 func chainMiddleware(h http.Handler, mws ...func(http.Handler) http.HandlerFunc) http.Handler {
 	for i := len(mws) - 1; i >= 0; i-- {
 		h = mws[i](h)
