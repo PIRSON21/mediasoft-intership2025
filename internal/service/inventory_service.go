@@ -188,7 +188,7 @@ func (s *InventoryService) GetProductFromWarehouse(ctx context.Context, warehous
 		return nil, err
 	}
 
-	response := parseProductFromWarehouseToResponse(inventory)
+	response := s.parseProductFromWarehouseToResponse(inventory)
 
 	return response, nil
 }
@@ -216,13 +216,13 @@ func parseProductRequestToInventory(warehouseIDStr, productIDStr string) (*domai
 }
 
 // parseProductFromWarehouseToResponse преобразует домен в DTO.
-func parseProductFromWarehouseToResponse(inv *domain.Inventory) *dto.ProductFromWarehouseResponse {
+func (s *InventoryService) parseProductFromWarehouseToResponse(inv *domain.Inventory) *dto.ProductFromWarehouseResponse {
 	response := &dto.ProductFromWarehouseResponse{
 		ProductID:          inv.Product.ID.String(),
 		ProductName:        inv.Product.Name,
 		ProductDescription: inv.Product.Description,
 		ProductWeight:      inv.Product.Weight,
-		ProductBarcode:     inv.Product.Barcode,
+		ProductBarcode:     fmt.Sprintf("%s/static/%s", s.host, inv.Product.Barcode),
 		ProductCount:       inv.ProductCount,
 		ProductPrice:       inv.ProductPrice,
 	}
@@ -249,14 +249,17 @@ func (s *InventoryService) CalculateCart(ctx context.Context, cartReq *dto.CartR
 		log.Error("error while parsing cart request to domain", zap.Error(err))
 		return nil, err
 	}
+	log.Debug("parsed cart request to domain", zap.Any("cart", cart))
 
 	err = s.repo.GetPriceAndDiscount(ctx, cart)
 	if err != nil {
 		log.Error("error while getting price and discount from repository", zap.Error(err))
 		return nil, err
 	}
+	log.Debug("got price and discount for cart", zap.Any("cart", cart))
 
 	resp := parseDomainToCartResponse(cart)
+	log.Debug("parsed domain to cart response", zap.Any("response", resp))
 
 	return resp, nil
 }

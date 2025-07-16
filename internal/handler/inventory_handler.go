@@ -481,6 +481,10 @@ func (h *InventoryHandler) CalculateCart(w http.ResponseWriter, r *http.Request)
 
 	resp, err := h.service.CalculateCart(r.Context(), cartReq)
 	if err != nil {
+		if custErr.Any(err, custErr.ErrNotEnoughProductCount, custErr.ErrNotFoundProductAtWarehouse) {
+			custErr.UnnamedError(w, http.StatusBadRequest, err.Error())
+			return
+		}
 		log.Error("error while calculating cart", zap.Error(err))
 		custErr.UnnamedError(w, http.StatusInternalServerError, "error while calculating cart")
 		return
