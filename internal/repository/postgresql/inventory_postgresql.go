@@ -242,6 +242,10 @@ func (db *Postgres) GetPriceAndDiscount(ctx context.Context, invs []*domain.Inve
 		return rows.Err()
 	}
 
+	if len(invMap) != len(productsID) {
+		return custErr.ErrNotFoundProductAtWarehouse
+	}
+
 	return nil
 }
 
@@ -267,17 +271,24 @@ func scanRows(rows pgx.Rows, invMap map[string]*domain.Inventory) error {
 			discount.Int64 = 0
 		}
 		if !count.Valid {
-			count.Int64 = 0
+			return custErr.ErrNotFoundProductAtWarehouse
 		}
 
 		if inv, ok := invMap[productID]; ok {
 			if inv.ProductCount > int(count.Int64) {
-				inv.ProductCount = int(count.Int64)
+				return custErr.ErrNotEnoughProductCount
 			}
 			inv.ProductPrice = price.Float64
 			inv.ProductSale = int(discount.Int64)
 		}
 	}
+
+	for _, inv := range invMap {
+		if inv.ProductPrice <= 0 {
+			return custErr.ErrNotFoundProductAtWarehouse
+		}
+	}
+
 	return nil
 }
 
