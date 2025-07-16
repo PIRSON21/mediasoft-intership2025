@@ -37,10 +37,9 @@ func GetLogger() *zap.Logger {
 // createLoggerConfig создает конфигурацию логгера на основе переданных настроек.
 func createLoggerConfig(config *config.LoggerConfig) zap.Config {
 	var (
-		level = zap.NewAtomicLevel()
-		err   error
-		// TODO: по заданию нужно использовать JSON, нужно поменять на "json"
-		encoding = "console"
+		level    = zap.NewAtomicLevel()
+		err      error
+		encoding = "json"
 
 		cfg zap.Config
 	)
@@ -53,7 +52,7 @@ func createLoggerConfig(config *config.LoggerConfig) zap.Config {
 
 	level, err = zap.ParseAtomicLevel(config.Level)
 	if err != nil {
-		log.Printf("error while parsing logger level: %v", err)
+		log.Fatalf("error while parsing logger level: %v", err)
 	}
 	cfg.Level = level
 
