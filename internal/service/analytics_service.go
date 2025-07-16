@@ -5,7 +5,6 @@ import (
 
 	"github.com/PIRSON21/mediasoft-intership2025/internal/domain"
 	"github.com/PIRSON21/mediasoft-intership2025/internal/dto"
-	"github.com/PIRSON21/mediasoft-intership2025/internal/handler"
 	"github.com/PIRSON21/mediasoft-intership2025/internal/repository"
 	"github.com/PIRSON21/mediasoft-intership2025/pkg/logger"
 	"github.com/google/uuid"
@@ -19,7 +18,7 @@ type AnalyticsService struct {
 
 // NewAnalyticsService создает новый экземпляр AnalyticsService.
 // Принимает в качестве аргумента репозиторий для работы с аналитикой.
-func NewAnalyticsService(repo repository.AnalyticsRepository) handler.AnalyticsService {
+func NewAnalyticsService(repo repository.AnalyticsRepository) *AnalyticsService {
 	return &AnalyticsService{
 		repo: repo,
 	}

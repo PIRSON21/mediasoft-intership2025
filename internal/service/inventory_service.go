@@ -15,12 +15,12 @@ import (
 
 // InventoryService предоставляет методы для работы с инвентаризацией.
 type InventoryService struct {
-	analytics *AnalyticsService
+	analytics handler.AnalyticsService
 	repo      repository.InventoryRepository
 }
 
 // NewInventoryService создает новый экземпляр InventoryService.
-func NewInventoryService(repo repository.InventoryRepository, analytics *AnalyticsService) handler.InventoryService {
+func NewInventoryService(repo repository.InventoryRepository, analytics handler.AnalyticsService) *InventoryService {
 	return &InventoryService{
 		analytics: analytics,
 		repo:      repo,
